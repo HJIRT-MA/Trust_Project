@@ -1,0 +1,78 @@
+<div class="p-8 max-w-7xl mx-auto">
+
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-2xl font-bold text-gray-800">Gestion Documentaire (RAG)</h2>
+    <button (click)="simulateUpload()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+      Simuler un Upload
+    </button>
+  </div>
+
+  @if (isUploading) {
+    <div class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex justify-between mb-2">
+        <span class="text-sm font-medium text-blue-700 flex items-center gap-2">
+          <i class="ti ti-loader animate-spin"></i> Ingestion et vectorisation en cours...
+        </span>
+        <span class="text-sm font-bold text-blue-700">{{ uploadProgress }}%</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-3">
+        <div class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+             [style.width.%]="uploadProgress">
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="relative overflow-x-auto shadow-md sm:rounded-xl border border-gray-100">
+    <table class="w-full text-sm text-left text-gray-500">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+      <tr>
+        <th scope="col" class="px-6 py-4">Nom du Document</th>
+        <th scope="col" class="px-6 py-4">Type</th>
+        <th scope="col" class="px-6 py-4">Taille</th>
+        <th scope="col" class="px-6 py-4">Statut</th>
+        <th scope="col" class="px-6 py-4 text-right">Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+        @for (doc of documents; track doc.id) {
+          <tr class="bg-white border-b hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
+              <i class="text-xl text-red-500 ti ti-file-type-pdf" *ngIf="doc.contentType.includes('pdf')"></i>
+              <i class="text-xl text-blue-500 ti ti-file-type-doc" *ngIf="doc.contentType.includes('word')"></i>
+              {{ doc.filename }}
+            </td>
+            <td class="px-6 py-4 text-gray-600">{{ doc.contentType.split('/')[1] | uppercase }}</td>
+            <td class="px-6 py-4 text-gray-600">{{ (doc.fileSize / 1024 / 1024) | number:'1.2-2' }} MB</td>
+            <td class="px-6 py-4">
+              @if (doc.status === 'COMPLETED') {
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded border border-green-200">
+                  Indexé dans pgvector
+                </span>
+              } @else if (doc.status === 'ERROR') {
+                <span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded border border-red-200">
+                  Échec
+                </span>
+              } @else {
+                <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-1 rounded border border-yellow-200">
+                  En attente
+                </span>
+              }
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="font-medium text-red-600 hover:text-red-800 hover:underline">Supprimer</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-center text-gray-500 bg-white">
+              <i class="ti ti-file-off text-4xl text-gray-300 mb-2 block"></i>
+              Aucun document n'a été uploadé dans la base de connaissances.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>
