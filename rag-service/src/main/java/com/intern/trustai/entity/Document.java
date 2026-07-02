@@ -2,12 +2,19 @@ package com.intern.trustai.entity;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "documents")
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class Document {
 
     @Id
@@ -29,5 +36,4 @@ public class Document {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Chunk> chunks = new ArrayList<>();
 
-    // Getters, Setters, et Constructeurs
 }
