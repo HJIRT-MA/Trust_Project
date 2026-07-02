@@ -19,6 +19,7 @@
 
     <modules>
         <module>gateway-service</module>
+        <module>rag-service</module>
     </modules>
 
     <dependencyManagement>
