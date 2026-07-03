@@ -1,1 +1,65 @@
-<p>chat works!</p>
+<div class="max-w-4xl mx-auto p-6 mt-10">
+
+  <div class="text-center mb-10">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Recherche Sémantique</h1>
+    <p class="text-gray-500">Posez une question en langage naturel pour interroger vos documents.</p>
+  </div>
+
+  <mat-card class="mb-8 shadow-sm rounded-xl overflow-hidden">
+    <mat-card-content class="p-2">
+      <div class="flex items-center gap-4">
+        <mat-form-field appearance="outline" class="w-full text-sm" subscriptSizing="dynamic">
+          <mat-label>Que cherchez-vous ?</mat-label>
+          <mat-icon matPrefix class="text-gray-400 ml-2">search</mat-icon>
+          <input matInput [(ngModel)]="searchQuery" (keyup.enter)="performSearch()" placeholder="Ex: Quelle est l'architecture du projet ?">
+          @if (searchQuery) {
+            <button matSuffix mat-icon-button aria-label="Clear" (click)="searchQuery=''">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" class="h-14 px-8" [disabled]="isSearching || !searchQuery" (click)="performSearch()">
+          Chercher
+        </button>
+      </div>
+    </mat-card-content>
+
+    @if (isSearching) {
+      <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+    }
+  </mat-card>
+
+  <div class="space-y-4">
+    @if (!isSearching && hasSearched) {
+      <p class="text-sm text-gray-500 font-medium mb-4">
+        {{ results.length }} fragment(s) pertinent(s) trouvé(s).
+      </p>
+    }
+
+    @for (chunk of results; track $index) {
+      <mat-card class="border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow">
+        <mat-card-header class="pb-2 pt-4">
+          <mat-card-subtitle class="flex items-center gap-2">
+            <mat-icon class="text-sm h-4 w-4 text-green-600">analytics</mat-icon>
+            <span class="font-bold text-green-700">Similarité : {{ chunk.score * 100 | number:'1.0-1' }}%</span>
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="text-gray-700 leading-relaxed text-sm">
+            {{ chunk.text }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+    } @empty {
+      @if (hasSearched && !isSearching) {
+        <div class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+          <mat-icon class="text-4xl text-gray-400 mb-2">find_in_page</mat-icon>
+          <h3 class="text-lg font-medium text-gray-600">Aucun résultat trouvé</h3>
+          <p class="text-gray-500 text-sm">Essayez de formuler votre question différemment.</p>
+        </div>
+      }
+    }
+  </div>
+
+</div>

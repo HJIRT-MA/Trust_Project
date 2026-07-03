@@ -1,6 +1,7 @@
 package com.intern.trustai.controller;
 
 
+import com.intern.trustai.dto.ChunkResponse;
 import com.intern.trustai.service.RagPipelineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,12 +47,12 @@ public class RagController {
 
     @PostMapping("/search")
     @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
-    public ResponseEntity<List<String>> searchContext(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<List<ChunkResponse>> searchContext(@RequestBody Map<String, Object> payload) {
         String query = (String) payload.get("query");
         // Récupérer le paramètre topK s'il existe, sinon 3 par défaut
         int topK = payload.containsKey("topK") ? (int) payload.get("topK") : 3;
 
-        List<String> relevantChunks = ragService.searchSimilarChunks(query, topK);
+        List<ChunkResponse> relevantChunks = ragService.searchSimilarChunks(query, topK);
         return ResponseEntity.ok(relevantChunks);
     }
 
