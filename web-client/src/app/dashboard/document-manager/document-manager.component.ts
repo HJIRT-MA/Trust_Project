@@ -1,7 +1,9 @@
 import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { WebsocketService } from '../../core/services/websocket.service';
 import { Subscription } from 'rxjs';
+import { NgxFileDropEntry, FileSystemFileEntry, FileSystemDirectoryEntry, NgxFileDropModule } from 'ngx-file-drop';
 
 export interface DocumentMeta {
   id: number;
@@ -14,57 +16,92 @@ export interface DocumentMeta {
 @Component({
   selector: 'app-document-manager',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgxFileDropModule],
   templateUrl: './document-manager.component.html',
   styleUrl: './document-manager.component.scss'
 })
 export class DocumentManagerComponent implements OnInit, OnDestroy {
   private wsService = inject(WebsocketService);
+  private http = inject(HttpClient);
   private progressSub!: Subscription;
 
   // État de l'UI
   isUploading = false;
   uploadProgress = 0;
+  uploadMessage = '';
 
   // Données de la DataTable
-  documents: DocumentMeta[] = [
-    // Données fictives pour tester le rendu visuel
-    { id: 1, filename: 'architecture_trustai.pdf', contentType: 'application/pdf', fileSize: 2450000, status: 'COMPLETED' },
-    { id: 2, filename: 'reunion_client.docx', contentType: 'application/msword', fileSize: 1200000, status: 'COMPLETED' }
-  ];
+  documents: DocumentMeta[] = [];
 
   ngOnInit() {
-    // S'abonner au canal WebSocket pour recevoir les mises à jour de progression
+    this.fetchDocuments();
+
     this.progressSub = this.wsService.watch('/topic/document-progress').subscribe((message) => {
       const data = JSON.parse(message.body);
 
       this.isUploading = true;
       this.uploadProgress = data.percentage;
+      this.uploadMessage = data.message;
 
       if (this.uploadProgress >= 100) {
-        setTimeout(() => this.isUploading = false, 1500);
-        // Ici, vous pourriez déclencher un appel API classique pour rafraîchir la liste des documents
+        setTimeout(() => {
+          this.isUploading = false;
+          this.fetchDocuments();
+        }, 1500);
       }
     });
   }
 
+  fetchDocuments() {
+    this.http.get<DocumentMeta[]>('http://localhost:8082/api/rag/documents').subscribe(docs => {
+      // Map to the frontend interface if needed, or just assign
+      this.documents = docs.map(d => ({
+        ...d,
+        status: 'COMPLETED' // Since it's in DB it's completed
+      }));
+    });
+  }
+
   ngOnDestroy() {
-    // Toujours se désabonner pour éviter les fuites de mémoire
     if (this.progressSub) {
       this.progressSub.unsubscribe();
     }
   }
 
-  // Fonction factice pour tester l'animation de la barre de progression sans backend
-  simulateUpload() {
+  public dropped(files: NgxFileDropEntry[]) {
+    for (const droppedFile of files) {
+      if (droppedFile.fileEntry.isFile) {
+        const fileEntry = droppedFile.fileEntry as FileSystemFileEntry;
+        fileEntry.file((file: File) => {
+          this.uploadFile(file);
+        });
+      }
+    }
+  }
+
+  uploadFile(file: File) {
+    if (file.size === 0) {
+      alert(`Le fichier ${file.name} est vide (0 octets) et ne peut pas être uploadé.`);
+      return;
+    }
+
     this.isUploading = true;
     this.uploadProgress = 0;
-    const interval = setInterval(() => {
-      this.uploadProgress += 10;
-      if (this.uploadProgress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => this.isUploading = false, 1000);
-      }
-    }, 500);
+    this.uploadMessage = 'Préparation de l\'envoi...';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post('http://localhost:8082/api/rag/documents', formData, { responseType: 'text' })
+      .subscribe({
+        next: () => {
+          // Progress is handled by WS
+        },
+        error: (err) => {
+          console.error(err);
+          this.isUploading = false;
+          alert('Erreur lors de l\'upload');
+        }
+      });
   }
 }

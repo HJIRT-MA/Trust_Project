@@ -1,6 +1,8 @@
 package com.intern.trustai.controller;
 
 
+import com.intern.trustai.entity.Document;
+import com.intern.trustai.repository.DocumentRepository;
 import com.intern.trustai.dto.ChunkResponse;
 import com.intern.trustai.service.RagPipelineService;
 import org.springframework.http.ResponseEntity;
@@ -13,12 +15,21 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/rag")
+@CrossOrigin(origins = "http://localhost:4200")
 public class RagController {
 
     private final RagPipelineService ragService;
+    private final DocumentRepository documentRepository;
 
-    public RagController(RagPipelineService ragService) {
+    public RagController(RagPipelineService ragService, DocumentRepository documentRepository) {
         this.ragService = ragService;
+        this.documentRepository = documentRepository;
+    }
+
+    @GetMapping("/documents")
+    @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
+    public ResponseEntity<List<Document>> getAllDocuments() {
+        return ResponseEntity.ok(documentRepository.findAll());
     }
 
     @GetMapping("/chat")
@@ -34,6 +45,7 @@ public class RagController {
             ragService.ingestFile(file);
             return ResponseEntity.ok("Document ingéré et vectorisé avec succès.");
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError().body("Erreur lors de l'ingestion : " + e.getMessage());
         }
     }

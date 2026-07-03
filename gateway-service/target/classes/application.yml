@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: gateway-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/trustai-realm
   cloud:
     gateway:
       globalcors:

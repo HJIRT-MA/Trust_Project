@@ -42,11 +42,10 @@ services:
       - trustai-network
     restart: unless-stopped
 
-  # Gestionnaire d'Identité et d'Accès (Keycloak)
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: trustai-keycloak
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -60,6 +59,7 @@ services:
       - "8081:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
     networks:
       - trustai-network
     restart: unless-stopped

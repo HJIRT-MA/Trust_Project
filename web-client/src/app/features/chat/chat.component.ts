@@ -21,7 +21,7 @@ import { RagService, ChunkResult } from '../../core/services/rag.service';
     MatProgressBarModule
   ],
   templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.css'] // Optionnel si vous utilisez 100% Tailwind
+  styleUrls: ['./chat.component.scss'] // Optionnel si vous utilisez 100% Tailwind
 })
 export class ChatComponent {
   private ragService = inject(RagService);

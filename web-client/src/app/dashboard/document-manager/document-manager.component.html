@@ -2,16 +2,28 @@
 
   <div class="flex justify-between items-center mb-8">
     <h2 class="text-2xl font-bold text-gray-800">Gestion Documentaire (RAG)</h2>
-    <button (click)="simulateUpload()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-      Simuler un Upload
-    </button>
+  </div>
+
+  <div class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+    <ngx-file-drop dropZoneLabel="Glissez-déposez vos fichiers ici" (onFileDrop)="dropped($event)" 
+                   contentClassName="p-10 border-2 border-dashed border-blue-300 bg-blue-50 text-blue-700 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors">
+      <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
+        <div class="flex flex-col items-center justify-center gap-3">
+          <i class="ti ti-upload text-4xl"></i>
+          <span class="font-medium">Glissez-déposez vos fichiers PDF ou Word ici</span>
+          <button type="button" (click)="openFileSelector()" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            Ou parcourez vos fichiers
+          </button>
+        </div>
+      </ng-template>
+    </ngx-file-drop>
   </div>
 
   @if (isUploading) {
     <div class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <div class="flex justify-between mb-2">
         <span class="text-sm font-medium text-blue-700 flex items-center gap-2">
-          <i class="ti ti-loader animate-spin"></i> Ingestion et vectorisation en cours...
+          <i class="ti ti-loader animate-spin"></i> {{ uploadMessage || 'Ingestion et vectorisation en cours...' }}
         </span>
         <span class="text-sm font-bold text-blue-700">{{ uploadProgress }}%</span>
       </div>

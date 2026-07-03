@@ -1,23 +1,26 @@
 package com.intern.trustai.service;
 
 import com.intern.trustai.dto.ChunkResponse;
-
-// 1. Corrected LangChain4j Document Import
+import com.intern.trustai.entity.Chunk;
+import com.intern.trustai.repository.ChunkRepository;
+import com.intern.trustai.repository.DocumentRepository;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import org.apache.tika.Tika;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,40 +28,81 @@ import java.util.stream.Collectors;
 public class RagPipelineServiceImp implements RagPipelineService {
 
     private final EmbeddingModel embeddingModel;
-    private final EmbeddingStore<TextSegment> embeddingStore; // Added generic here
+    private final EmbeddingStore<TextSegment> embeddingStore;
+    private final DocumentRepository documentRepository;
+    private final ChunkRepository chunkRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     private final Tika tika;
 
-    public RagPipelineServiceImp(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore) {
+    public RagPipelineServiceImp(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore,
+                                 DocumentRepository documentRepository, ChunkRepository chunkRepository,
+                                 SimpMessagingTemplate messagingTemplate) {
         this.embeddingModel = embeddingModel;
         this.embeddingStore = embeddingStore;
+        this.documentRepository = documentRepository;
+        this.chunkRepository = chunkRepository;
+        this.messagingTemplate = messagingTemplate;
         this.tika = new Tika();
     }
 
-    /**
-     * INGESTION : Upload -> Tika -> Splitter -> Embeddings -> pgvector
-     */
+    @Transactional(rollbackFor = Exception.class)
     public void ingestFile(MultipartFile file) throws Exception {
+        // Notifier le début
+        sendProgress(0, "Extraction du texte en cours...");
+
+        // 1. Sauvegarder le Document en base (JPA)
+        com.intern.trustai.entity.Document dbDoc = new com.intern.trustai.entity.Document();
+        dbDoc.setFilename(file.getOriginalFilename());
+        dbDoc.setContentType(file.getContentType());
+        dbDoc.setFileSize(file.getSize());
+        dbDoc.setUploadedAt(LocalDateTime.now());
+        dbDoc = documentRepository.save(dbDoc);
+
         try (InputStream stream = file.getInputStream()) {
             String extractedText = tika.parseToString(stream);
             Document document = Document.from(extractedText);
 
-            DocumentSplitter splitter = DocumentSplitters.recursive(
-                    500, // Taille max du chunk (en tokens)
-                    50   // Overlap (chevauchement)
-            );
+            sendProgress(20, "Texte extrait, découpage en chunks...");
+
+            DocumentSplitter splitter = DocumentSplitters.recursive(500, 50);
             List<TextSegment> segments = splitter.split(document);
 
-            List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
-            embeddingStore.addAll(embeddings, segments);
+            int totalSegments = segments.size();
+            for (int i = 0; i < totalSegments; i++) {
+                TextSegment segment = segments.get(i);
+                
+                // Calculer l'embedding avec OpenAI
+                Embedding embedding = embeddingModel.embed(segment).content();
+                
+                // Sauvegarder dans pgvector via JPA
+                Chunk dbChunk = new Chunk();
+                dbChunk.setDocument(dbDoc);
+                dbChunk.setContent(segment.text());
+                dbChunk.setChunkIndex(i);
+                dbChunk.setEmbedding(embedding.vector());
+                chunkRepository.save(dbChunk);
+
+                // Aussi ajouter dans le store LangChain4j pour faciliter la recherche
+                embeddingStore.add(embedding, segment);
+
+                // Envoyer la progression WebSocket
+                int progress = 20 + (int) (((i + 1) / (float) totalSegments) * 80);
+                sendProgress(progress, "Vectorisation en cours... (" + (i+1) + "/" + totalSegments + ")");
+            }
+
+            sendProgress(100, "Ingestion terminée avec succès.");
+        } catch (Exception e) {
+            sendProgress(0, "Erreur lors de l'ingestion : " + e.getMessage());
+            throw e;
         }
     }
 
-    /**
-     * RETRIEVAL : Query -> Vector -> Recherche Cosinus -> Retourne Text + Score
-     */
-    // 2. Updated method signature to return List<ChunkResponse>
-    public List<ChunkResponse> searchSimilarChunks(String userQuery, int topK) {
+    private void sendProgress(int percentage, String message) {
+        String jsonPayload = String.format("{\"percentage\": %d, \"message\": \"%s\"}", percentage, message);
+        messagingTemplate.convertAndSend("/topic/document-progress", jsonPayload);
+    }
 
+    public List<ChunkResponse> searchSimilarChunks(String userQuery, int topK) {
         Embedding queryEmbedding = embeddingModel.embed(userQuery).content();
 
         EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
@@ -69,7 +113,6 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
         EmbeddingSearchResult<TextSegment> result = embeddingStore.search(searchRequest);
 
-        // 3. Removed the double-return. This is the only return needed now.
         return result.matches().stream()
                 .map(match -> new ChunkResponse(match.embedded().text(), match.score()))
                 .collect(Collectors.toList());
