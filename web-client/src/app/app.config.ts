@@ -8,6 +8,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { KeycloakAngularModule, KeycloakService } from 'keycloak-angular';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export function initializeKeycloak(keycloak: KeycloakService, platformId: Object) {
   return () => {
@@ -36,6 +37,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(withInterceptors([authInterceptor])), 
     provideAnimationsAsync(),
+    provideCharts(withDefaultRegisterables()),
     {
       provide: APP_INITIALIZER,
       useFactory: initializeKeycloak,
