@@ -30,7 +30,7 @@ public class Chunk {
     private Integer chunkIndex;
 
     // Mapping pgvector : On utilise float[] avec une définition de colonne native
-    @Column(columnDefinition = "vector(1536)")
+    @Column(columnDefinition = "vector(384)")
     private float[] embedding;
 
     // Getters, Setters, et Constructeurs

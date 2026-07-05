@@ -4,6 +4,14 @@ server:
 spring:
   application:
     name: rag-service
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
   datasource:
     url: jdbc:postgresql://localhost:5432/trustaidb
     username: trustai_user
@@ -11,6 +19,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   flyway:
     baseline-on-migrate: true
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -23,6 +32,7 @@ spring:
         jwt:
           issuer-uri: http://localhost:8081/realms/trustai-realm
 
-openai:
+groq:
   api:
-    key: "sk-dummy-key"
+    key: ${GROQ_API_KEY:YOUR_API_KEY_HERE}
+  model: "llama3-8b-8192"
