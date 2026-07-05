@@ -19,10 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.intern.trustai.security.TenantContext;
+
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
 
 @Service
 public class RagPipelineServiceImp implements RagPipelineService {
@@ -56,6 +59,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
         dbDoc.setContentType(file.getContentType());
         dbDoc.setFileSize(file.getSize());
         dbDoc.setUploadedAt(LocalDateTime.now());
+        dbDoc.setTenantId(TenantContext.getCurrentTenant());
         dbDoc = documentRepository.save(dbDoc);
 
         try (InputStream stream = file.getInputStream()) {
@@ -80,7 +84,11 @@ public class RagPipelineServiceImp implements RagPipelineService {
                 dbChunk.setContent(segment.text());
                 dbChunk.setChunkIndex(i);
                 dbChunk.setEmbedding(embedding.vector());
+                dbChunk.setTenantId(TenantContext.getCurrentTenant());
                 chunkRepository.save(dbChunk);
+
+                // Add metadata for LangChain4j filter
+                segment.metadata().put("tenant_id", TenantContext.getCurrentTenant());
 
                 // Aussi ajouter dans le store LangChain4j pour faciliter la recherche
                 embeddingStore.add(embedding, segment);
@@ -109,6 +117,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
                 .queryEmbedding(queryEmbedding)
                 .maxResults(topK)
                 .minScore(0.7)
+                .filter(metadataKey("tenant_id").isEqualTo(TenantContext.getCurrentTenant()))
                 .build();
 
         EmbeddingSearchResult<TextSegment> result = embeddingStore.search(searchRequest);
