@@ -12,9 +12,6 @@ import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
-import dev.langchain4j.store.embedding.EmbeddingSearchResult;
-import dev.langchain4j.store.embedding.EmbeddingStore;
 import org.apache.tika.Tika;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -33,19 +30,17 @@ import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metad
 public class RagPipelineServiceImp implements RagPipelineService {
 
     private final EmbeddingModel embeddingModel;
-    private final EmbeddingStore<TextSegment> embeddingStore;
     private final DocumentRepository documentRepository;
     private final ChunkRepository chunkRepository;
     private final InteractionLogRepository interactionLogRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final Tika tika;
 
-    public RagPipelineServiceImp(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore,
+    public RagPipelineServiceImp(EmbeddingModel embeddingModel,
                                  DocumentRepository documentRepository, ChunkRepository chunkRepository,
                                  InteractionLogRepository interactionLogRepository,
                                  SimpMessagingTemplate messagingTemplate) {
         this.embeddingModel = embeddingModel;
-        this.embeddingStore = embeddingStore;
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.interactionLogRepository = interactionLogRepository;
@@ -108,7 +103,6 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
                 // Aussi ajouter dans le store LangChain4j pour faciliter la recherche
                 embeddingStore.add(embedding, segment);
-
                 // Envoyer la progression WebSocket
                 int progress = 20 + (int) (((i + 1) / (float) totalSegments) * 80);
                 sendProgress(progress, "Vectorisation en cours... (" + (i+1) + "/" + totalSegments + ")");
@@ -144,10 +138,12 @@ public class RagPipelineServiceImp implements RagPipelineService {
                 .filter(metadataKey("tenant_id").isEqualTo(TenantContext.getCurrentTenant()))
                 .build();
 
-        EmbeddingSearchResult<TextSegment> result = embeddingStore.search(searchRequest);
+        dev.langchain4j.store.embedding.EmbeddingSearchResult<TextSegment> result = embeddingStore.search(searchRequest);
 
         return result.matches().stream()
                 .map(match -> new ChunkResponse(match.embedded().text(), match.score()))
                 .collect(Collectors.toList());
+
+
     }
 }

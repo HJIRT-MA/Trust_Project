@@ -13,6 +13,12 @@ export const routes: Routes = [
     data: { roles: [] }
   },
   {
+    path: 'chatbot',
+    loadComponent: () => import('./features/chatbot/chatbot.component').then(m => m.ChatbotComponent),
+    canActivate: [authGuard],
+    data: { roles: [] }
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard],

@@ -1,0 +1,66 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <h2><mat-icon>smart_toy</mat-icon> Assistant RAG</h2>
+    <button mat-icon-button color="warn" (click)="clearChat()" title="Effacer l'historique">
+      <mat-icon>delete_sweep</mat-icon>
+    </button>
+  </div>
+
+  <div class="chat-messages" #scrollMe>
+    @if (messages.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">chat_bubble_outline</mat-icon>
+        <p>Bonjour ! Posez-moi une question sur vos documents.</p>
+      </div>
+    }
+
+    @for (msg of messages; track $index) {
+      <div class="message-wrapper" [class.user-wrapper]="msg.role === 'user'">
+        
+        <div class="avatar" [class.user-avatar]="msg.role === 'user'">
+          <mat-icon>{{ msg.role === 'user' ? 'person' : 'smart_toy' }}</mat-icon>
+        </div>
+        
+        <div class="message-content" [class.user-message]="msg.role === 'user'" [class.assistant-message]="msg.role === 'assistant'">
+          <p class="text">{{ msg.content }}</p>
+          
+          @if (msg.role === 'assistant' && msg.content === '' && isGenerating && $index === messages.length - 1) {
+            <mat-spinner diameter="20" class="typing-indicator"></mat-spinner>
+          }
+
+          @if (msg.sources && msg.sources.length > 0) {
+            <mat-accordion class="sources-accordion">
+              <mat-expansion-panel class="sources-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon class="source-icon">library_books</mat-icon>
+                    Sources citées ({{msg.sources.length}})
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                
+                <div class="sources-list">
+                  @for (source of msg.sources; track $index) {
+                    <div class="source-item">
+                      <div class="source-score">Pertinence : {{ source.score * 100 | number:'1.0-1' }}%</div>
+                      <div class="source-text">{{ source.text }}</div>
+                    </div>
+                  }
+                </div>
+              </mat-expansion-panel>
+            </mat-accordion>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="chat-input-area">
+    <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+      <input matInput [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" 
+             placeholder="Écrivez votre message ici..." [disabled]="isGenerating">
+      <button matSuffix mat-icon-button color="primary" (click)="sendMessage()" [disabled]="!newMessage.trim() || isGenerating">
+        <mat-icon>send</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+</div>
