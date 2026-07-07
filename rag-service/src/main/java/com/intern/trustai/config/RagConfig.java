@@ -14,6 +14,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RagConfig {
 
+    @Value("${spring.datasource.username}")
+    private String dbUsername;
+
+    @Value("${spring.datasource.password}")
+    private String dbPassword;
+
     @Bean
     public StreamingChatLanguageModel chatLanguageModel() {
         return OllamaStreamingChatModel.builder()

@@ -10,6 +10,8 @@ import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.data.segment.TextSegment;
 import org.apache.tika.Tika;
@@ -30,6 +32,7 @@ import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metad
 public class RagPipelineServiceImp implements RagPipelineService {
 
     private final EmbeddingModel embeddingModel;
+    private final EmbeddingStore<TextSegment> embeddingStore;
     private final DocumentRepository documentRepository;
     private final ChunkRepository chunkRepository;
     private final InteractionLogRepository interactionLogRepository;
@@ -37,10 +40,12 @@ public class RagPipelineServiceImp implements RagPipelineService {
     private final Tika tika;
 
     public RagPipelineServiceImp(EmbeddingModel embeddingModel,
+                                 EmbeddingStore<TextSegment> embeddingStore,
                                  DocumentRepository documentRepository, ChunkRepository chunkRepository,
                                  InteractionLogRepository interactionLogRepository,
                                  SimpMessagingTemplate messagingTemplate) {
         this.embeddingModel = embeddingModel;
+        this.embeddingStore = embeddingStore;
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.interactionLogRepository = interactionLogRepository;

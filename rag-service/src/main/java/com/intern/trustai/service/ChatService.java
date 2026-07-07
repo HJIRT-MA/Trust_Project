@@ -11,6 +11,9 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import com.intern.trustai.repository.InteractionLogRepository;
+import com.intern.trustai.entity.InteractionLog;
+import com.intern.trustai.security.TenantContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,14 +25,17 @@ public class ChatService {
 
     private final StreamingChatLanguageModel chatLanguageModel;
     private final RagPipelineService ragPipelineService;
+    private final InteractionLogRepository interactionLogRepository;
 
-    public ChatService(StreamingChatLanguageModel chatLanguageModel, RagPipelineService ragPipelineService) {
+    public ChatService(StreamingChatLanguageModel chatLanguageModel, RagPipelineService ragPipelineService, InteractionLogRepository interactionLogRepository) {
         this.chatLanguageModel = chatLanguageModel;
         this.ragPipelineService = ragPipelineService;
+        this.interactionLogRepository = interactionLogRepository;
     }
 
     public SseEmitter streamChat(ChatRequest request) {
         SseEmitter emitter = new SseEmitter(180_000L); // 3 minutes timeout
+        String currentTenant = TenantContext.getCurrentTenant();
 
         // 1. Retrieve similar chunks
         List<ChunkResponse> relevantChunks = ragPipelineService.searchSimilarChunks(request.getQuery(), 3);
@@ -79,9 +85,21 @@ public class ChatService {
             @Override
             public void onComplete(Response<AiMessage> response) {
                 try {
+                    // Log the interaction
+                    InteractionLog log = new InteractionLog();
+                    log.setTenantId(currentTenant);
+                    log.setQueryText(request.getQuery());
+                    log.setModelName("llama3.2:3b");
+                    if (response.tokenUsage() != null) {
+                        log.setTokensUsed(response.tokenUsage().totalTokenCount());
+                    } else {
+                        log.setTokensUsed(0);
+                    }
+                    interactionLogRepository.save(log);
+
                     emitter.send(SseEmitter.event().name("done").data("[DONE]"));
                     emitter.complete();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     emitter.completeWithError(e);
                 }
             }
