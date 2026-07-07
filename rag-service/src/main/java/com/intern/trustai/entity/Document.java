@@ -11,12 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 @Entity
 @Table(name = "documents")
-@FilterDef(name = "tenantFilter", parameters = {@ParamDef(name = "tenantId", type = String.class)})
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @AllArgsConstructor
 @NoArgsConstructor

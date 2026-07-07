@@ -4,6 +4,8 @@ import com.intern.trustai.dto.ChunkResponse;
 import com.intern.trustai.entity.Chunk;
 import com.intern.trustai.repository.ChunkRepository;
 import com.intern.trustai.repository.DocumentRepository;
+import com.intern.trustai.repository.InteractionLogRepository;
+import com.intern.trustai.entity.InteractionLog;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
@@ -34,16 +36,19 @@ public class RagPipelineServiceImp implements RagPipelineService {
     private final EmbeddingStore<TextSegment> embeddingStore;
     private final DocumentRepository documentRepository;
     private final ChunkRepository chunkRepository;
+    private final InteractionLogRepository interactionLogRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final Tika tika;
 
     public RagPipelineServiceImp(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore,
                                  DocumentRepository documentRepository, ChunkRepository chunkRepository,
+                                 InteractionLogRepository interactionLogRepository,
                                  SimpMessagingTemplate messagingTemplate) {
         this.embeddingModel = embeddingModel;
         this.embeddingStore = embeddingStore;
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
+        this.interactionLogRepository = interactionLogRepository;
         this.messagingTemplate = messagingTemplate;
         this.tika = new Tika();
     }
@@ -75,8 +80,19 @@ public class RagPipelineServiceImp implements RagPipelineService {
             for (int i = 0; i < totalSegments; i++) {
                 TextSegment segment = segments.get(i);
                 
-                // Calculer l'embedding avec OpenAI
-                Embedding embedding = embeddingModel.embed(segment).content();
+                // Calculer l'embedding avec OpenAI ou Ollama
+                dev.langchain4j.model.output.Response<Embedding> embeddingResponse = embeddingModel.embed(segment);
+                Embedding embedding = embeddingResponse.content();
+
+                // Log token usage
+                if (embeddingResponse.tokenUsage() != null) {
+                    InteractionLog log = new InteractionLog();
+                    log.setTenantId(TenantContext.getCurrentTenant());
+                    log.setQueryText("Ingestion: " + file.getOriginalFilename() + " (chunk " + i + ")");
+                    log.setTokensUsed(embeddingResponse.tokenUsage().inputTokenCount());
+                    log.setModelName("llama3.2:3b");
+                    interactionLogRepository.save(log);
+                }
                 
                 // Sauvegarder dans pgvector via JPA
                 Chunk dbChunk = new Chunk();
@@ -111,7 +127,15 @@ public class RagPipelineServiceImp implements RagPipelineService {
     }
 
     public List<ChunkResponse> searchSimilarChunks(String userQuery, int topK) {
-        Embedding queryEmbedding = embeddingModel.embed(userQuery).content();
+        dev.langchain4j.model.output.Response<Embedding> embeddingResponse = embeddingModel.embed(userQuery);
+        Embedding queryEmbedding = embeddingResponse.content();
+
+        InteractionLog log = new InteractionLog();
+        log.setTenantId(TenantContext.getCurrentTenant());
+        log.setQueryText(userQuery);
+        log.setTokensUsed(embeddingResponse.tokenUsage() != null ? embeddingResponse.tokenUsage().inputTokenCount() : 0);
+        log.setModelName("llama3.2:3b");
+        interactionLogRepository.save(log);
 
         EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding)

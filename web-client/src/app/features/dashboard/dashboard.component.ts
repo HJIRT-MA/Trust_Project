@@ -1,6 +1,7 @@
 import {Component, OnInit, inject} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {DocumentManagerComponent} from "../../dashboard/document-manager/document-manager.component";
+import {UserManagerComponent} from "./user-manager/user-manager.component";
 import {BaseChartDirective} from "ng2-charts";
 import {DashboardService, DashboardStats} from "../../core/services/dashboard.service";
 import {ChartConfiguration, ChartOptions} from "chart.js";
@@ -9,7 +10,7 @@ import {ChartConfiguration, ChartOptions} from "chart.js";
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DocumentManagerComponent, BaseChartDirective],
+  imports: [CommonModule, DocumentManagerComponent, UserManagerComponent, BaseChartDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

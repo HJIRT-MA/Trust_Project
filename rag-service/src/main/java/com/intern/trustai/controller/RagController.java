@@ -3,7 +3,9 @@ package com.intern.trustai.controller;
 
 import com.intern.trustai.entity.Document;
 import com.intern.trustai.repository.DocumentRepository;
+import com.intern.trustai.repository.InteractionLogRepository;
 import com.intern.trustai.dto.ChunkResponse;
+import com.intern.trustai.dto.DashboardStatsResponse;
 import com.intern.trustai.service.RagPipelineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +22,12 @@ public class RagController {
 
     private final RagPipelineService ragService;
     private final DocumentRepository documentRepository;
+    private final InteractionLogRepository interactionLogRepository;
 
-    public RagController(RagPipelineService ragService, DocumentRepository documentRepository) {
+    public RagController(RagPipelineService ragService, DocumentRepository documentRepository, InteractionLogRepository interactionLogRepository) {
         this.ragService = ragService;
         this.documentRepository = documentRepository;
+        this.interactionLogRepository = interactionLogRepository;
     }
 
     @GetMapping("/documents")
@@ -51,8 +55,32 @@ public class RagController {
     }
     @GetMapping("/dashboard/metrics")
     @PreAuthorize("hasRole('admin')")
-    public String getDashboardMetrics() {
-        return "Statistiques globales renvoyées.";
+    public ResponseEntity<DashboardStatsResponse> getDashboardMetrics() {
+        long totalDocs = documentRepository.count();
+        long totalReqs = interactionLogRepository.countTotalRequests();
+        long totalToks = interactionLogRepository.sumTotalTokens();
+
+        List<DashboardStatsResponse.HistoryEntry> history = interactionLogRepository.getRequestsHistory().stream()
+                .map(obj -> DashboardStatsResponse.HistoryEntry.builder()
+                        .date((String) obj[0])
+                        .count(((Number) obj[1]).longValue())
+                        .build())
+                .toList();
+
+        List<DashboardStatsResponse.TokenDistributionEntry> tokens = interactionLogRepository.getTokenDistribution().stream()
+                .map(obj -> DashboardStatsResponse.TokenDistributionEntry.builder()
+                        .model((String) obj[0])
+                        .tokens(((Number) obj[1]).longValue())
+                        .build())
+                .toList();
+
+        return ResponseEntity.ok(DashboardStatsResponse.builder()
+                .totalDocuments(totalDocs)
+                .totalRequests(totalReqs)
+                .totalTokens(totalToks)
+                .requestsHistory(history)
+                .tokenDistribution(tokens)
+                .build());
     }
 
 

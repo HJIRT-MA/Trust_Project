@@ -26,3 +26,11 @@ spring:
 openai:
   api:
     key: "sk-dummy-key"
+
+keycloak:
+  server-url: http://localhost:8081
+  target-realm: trustai-realm
+  admin:
+    username: admin
+    password: admin
+    client-id: admin-cli

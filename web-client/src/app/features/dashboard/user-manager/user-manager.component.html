@@ -1,0 +1,53 @@
+<div class="user-manager-container">
+  <div *ngIf="loading" class="flex justify-center items-center py-12">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading" class="mat-elevation-z8 bg-white rounded-lg overflow-hidden">
+    <table mat-table [dataSource]="dataSource" class="w-full">
+      
+      <!-- Username Column -->
+      <ng-container matColumnDef="username">
+        <th mat-header-cell *matHeaderCellDef class="font-semibold text-gray-700"> Utilisateur </th>
+        <td mat-cell *matCellDef="let user" class="py-3"> {{user.username}} </td>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef class="font-semibold text-gray-700"> Email </th>
+        <td mat-cell *matCellDef="let user" class="py-3 text-gray-500"> {{user.email}} </td>
+      </ng-container>
+
+      <!-- Roles Column -->
+      <ng-container matColumnDef="roles">
+        <th mat-header-cell *matHeaderCellDef class="font-semibold text-gray-700"> Rôles </th>
+        <td mat-cell *matCellDef="let user" class="py-3">
+          <mat-form-field appearance="outline" class="w-48 text-sm mt-2">
+            <mat-label>Assigner Rôles</mat-label>
+            <mat-select multiple [(ngModel)]="user.roles">
+              <mat-option *ngFor="let role of availableRoles" [value]="role">{{role}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="font-semibold text-gray-700"> Actions </th>
+        <td mat-cell *matCellDef="let user" class="py-3">
+          <button mat-flat-button color="primary" (click)="updateRoles(user)">
+            <mat-icon>save</mat-icon> Sauvegarder
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50 transition-colors"></tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+                   showFirstLastButtons
+                   aria-label="Sélectionner la page des utilisateurs">
+    </mat-paginator>
+  </div>
+</div>
