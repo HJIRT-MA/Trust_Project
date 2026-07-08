@@ -66,6 +66,29 @@ export class DashboardComponent implements OnInit{
     maintainAspectRatio: false
   };
 
+  public histogramChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets : [
+      {
+        data: [],
+        label: 'Requêtes',
+        backgroundColor: 'rgba(16, 185, 129, 0.8)', // emerald-500
+        borderColor: '#10b981',
+        borderWidth: 1,
+        borderRadius: 4
+      }
+    ]
+  };
+
+  public histogramChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    }
+  };
+
+
   ngOnInit() {
     this.dashboardService.getStats().subscribe({
       next: (data)=> {
@@ -77,6 +100,10 @@ export class DashboardComponent implements OnInit{
 
         this.tokensChartData.labels = data.tokenDistribution.map(t => t.model);
         this.tokensChartData.datasets[0].data = data.tokenDistribution.map(t => t.tokens);
+
+        this.histogramChartData.labels = data.requestsHistory.map(h => h.date);
+        this.histogramChartData.datasets[0].data = data.requestsHistory.map(h => h.count);
+
 
         this.loading = false;
 

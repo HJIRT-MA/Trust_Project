@@ -14,8 +14,7 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table (name = "chunks")
-@FilterDef(name = "tenantFilter",  parameters = {@ParamDef(name = "tenantId", type = String.class)})
-@Filter(name = "tenantFilter", condition = "tenant_id= : tenantId")
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

@@ -19,10 +19,10 @@ public class TenantAspect {
 
     @Before("execution(* com.intern.trustai.service..*(..)) || execution(* com.intern.trustai.repository..*(..))")
     public void enableTenantFilter(){
-        String tenanytId= TenantContext.getCurrentTenant();
-        if(tenanytId!=null){
+        String tenantId= TenantContext.getCurrentTenant();
+        if(tenantId!=null){
             Session session = entityManager.unwrap(Session.class);
-            session.enableFilter("tenantFilter").setParameter("tenantId", tenanytId);
+            session.enableFilter("tenantFilter").setParameter("tenantId", tenantId);
         }
 
     }

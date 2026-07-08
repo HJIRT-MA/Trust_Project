@@ -20,8 +20,7 @@ export function initializeKeycloak(keycloak: KeycloakService, platformId: Object
           clientId: 'trustai-client'
         },
         initOptions: {
-          onLoad: 'check-sso',
-          silentCheckSsoRedirectUri: window.location.origin + '/assets/silent-check-sso.html'
+          checkLoginIframe: false
         },
         enableBearerInterceptor: false // L'injection du JWT est gérée par authInterceptor
       });
