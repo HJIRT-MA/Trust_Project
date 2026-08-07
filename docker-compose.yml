@@ -60,6 +60,7 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+      - ./keycloak-theme/trustai:/opt/keycloak/themes/trustai
     networks:
       - trustai-network
     restart: unless-stopped

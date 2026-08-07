@@ -3,6 +3,136 @@
 @tailwind utilities;
 
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body {
+  margin: 0;
+  font-family: 'Inter', 'Roboto', "Helvetica Neue", sans-serif;
+  background: #0f0b1e;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Fix Tailwind Preflight conflict with Angular Material MDC Outlines */
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-width: 1px !important;
+}
+
+.mat-mdc-form-field-infix {
+  /* Ensures the input aligns properly without being crushed by Tailwind flex resets */
+  width: auto !important;
+}
+
+/* --- Angular Material Dark Overrides --- */
+
+/* Form field outline */
+.mat-mdc-text-field-wrapper {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+}
+
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: rgba(99, 102, 241, 0.6) !important;
+}
+
+.mat-mdc-input-element,
+.mat-mdc-form-field input {
+  color: rgba(255, 255, 255, 0.9) !important;
+  caret-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.mat-mdc-form-field input::placeholder {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.mat-mdc-form-field-focus-overlay {
+  background: transparent !important;
+}
+
+/* Material icon color */
+.mat-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* FAB / Buttons */
+.mat-mdc-fab.mat-primary,
+.mat-mdc-mini-fab.mat-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+}
+
+.mat-mdc-fab.mat-primary:hover {
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5) !important;
+}
+
+/* Stroked button */
+.mat-mdc-outlined-button {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.mat-mdc-outlined-button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Icon buttons */
+.mat-mdc-icon-button {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.mat-mdc-icon-button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Progress bar */
+.mat-mdc-progress-bar .mdc-linear-progress__buffer-bar {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.mat-mdc-progress-bar .mdc-linear-progress__bar-inner {
+  border-color: #6366f1 !important;
+}
+
+/* Custom scrollbar for the whole app */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+/* --- ngx-file-drop Dark Theme Override --- */
+.ngx-file-drop__drop-zone {
+  border: 2px dashed rgba(99, 102, 241, 0.3) !important;
+  background: rgba(99, 102, 241, 0.05) !important;
+  border-radius: 0.75rem !important;
+  color: #a5b4fc !important;
+  margin: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.ngx-file-drop__drop-zone:hover {
+  background: rgba(99, 102, 241, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+.ngx-file-drop__content {
+  color: inherit !important;
+}

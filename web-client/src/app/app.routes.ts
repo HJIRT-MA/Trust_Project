@@ -3,10 +3,6 @@ import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
-    path: 'auth',
-    loadComponent: () => import('./features/auth/auth.component').then(m => m.AuthComponent)
-  },
-  {
     path: 'chat',
     loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent),
     canActivate: [authGuard],
@@ -20,7 +16,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'auth',
-    pathMatch: 'full' // Redirige vers /auth par défaut
+    redirectTo: 'chat',
+    pathMatch: 'full' // Redirige vers /chat par défaut
   }
 ];

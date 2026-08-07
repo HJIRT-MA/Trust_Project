@@ -1,0 +1,13 @@
+package com.intern.trustai.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TokenDistributionItem {
+    private String model;
+    private long tokens;
+}

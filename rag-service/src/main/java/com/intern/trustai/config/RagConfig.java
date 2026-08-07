@@ -1,9 +1,12 @@
 package com.intern.trustai.config;
 
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
+
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,9 +46,18 @@ public class RagConfig {
                 .database("trustaidb")
                 .user(dbUsername)
                 .password(dbPassword)
-                .table("chunks") // Le nom de la table créée à la Semaine 3
+                .table("langchain_chunks") // Use a separate table for LangChain4j to avoid JPA conflicts
                 .dimension(768) // La taille du vecteur Ollama nomic-embed-text
                 .build();
     }
+
+   @Bean
+    public ChatLanguageModel chatLanguageModel() {
+        return OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("llama3:latest")
+                .timeout(Duration.ofMinutes(5))
+                .build();
+   }
 
 }

@@ -104,4 +104,19 @@ export class DocumentManagerComponent implements OnInit, OnDestroy {
         }
       });
   }
+
+  deleteDocument(id:number){
+    if(confirm('Voulez-vous vraiment supprimer ce document ? Cette action est irréversible.'))
+      this.http.delete(`http://localhost:8082/api/rag/documents/${id}`, {responseType: 'text'})
+        .subscribe({
+          next: ()=>{
+            this.fetchDocuments();
+          },
+          error: (err)=>{
+            console.error('Erreur lors de la suppression', err);
+            alert('Vous n`avez pas l`autorisation de supprimer ce document ou une erreur est survenue.');
+          }
+        });
+
+  }
 }

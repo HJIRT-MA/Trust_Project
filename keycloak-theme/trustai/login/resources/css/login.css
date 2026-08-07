@@ -1,0 +1,712 @@
+/* ============================================
+   TrustAI Chain â€” Keycloak Custom Login Theme
+   Glassmorphism Dark Theme
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* --- Background & Page --- */
+body, html {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+body {
+  background: #0f0b1e !important;
+  overflow-x: hidden;
+}
+
+/* Animated orbs via pseudo-elements on body */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  z-index: 0;
+  animation: float 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+body::before {
+  width: 420px;
+  height: 420px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  top: -80px;
+  left: -100px;
+}
+
+body::after {
+  width: 360px;
+  height: 360px;
+  background: linear-gradient(135deg, #ec4899, #f43f5e);
+  bottom: -60px;
+  right: -80px;
+  animation-delay: -4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  33% { transform: translateY(-30px) scale(1.05); }
+  66% { transform: translateY(20px) scale(0.95); }
+}
+
+/* --- Hide default Keycloak header text --- */
+#kc-header {
+  display: flex !important;
+  justify-content: center;
+  padding: 2rem 0 1rem;
+  position: relative;
+  z-index: 10;
+}
+
+#kc-header-wrapper {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1.75rem !important;
+  font-weight: 800 !important;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe, #a5b4fc) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  letter-spacing: -0.02em;
+  text-transform: none !important;
+}
+
+/* --- Login Card --- */
+#kc-content {
+  position: relative;
+  z-index: 10;
+}
+
+#kc-content-wrapper {
+  position: relative;
+  z-index: 10;
+}
+
+.login-pf body {
+  background: #0f0b1e !important;
+}
+
+#kc-login {
+  position: relative;
+  z-index: 10;
+}
+
+#kc-form,
+.card-pf,
+#kc-form-wrapper {
+  position: relative;
+  z-index: 10;
+}
+
+/* Main card container */
+#kc-container-wrapper,
+.card-pf {
+  background: rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
+  padding: 2rem !important;
+  animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- Form Title --- */
+#kc-page-title,
+#kc-form-options label,
+h1, h2 {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  text-align: center;
+}
+
+#kc-page-title {
+  font-size: 1.25rem !important;
+  margin-bottom: 1.5rem !important;
+  background: linear-gradient(135deg, #e0e7ff, #a5b4fc) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* --- Form Labels --- */
+label,
+.control-label,
+.pf-c-form__label-text {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.4rem !important;
+}
+
+/* --- Input Fields --- */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input.pf-c-form-control,
+.pf-c-form-control,
+.pf-c-input-group input,
+.pf-c-input-group .pf-c-form-control,
+#password,
+#username {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.938rem !important;
+  font-family: 'Inter', sans-serif !important;
+  transition: all 0.25s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Password input group wrapper */
+.pf-c-input-group,
+.input-group,
+div[class*="password"] {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.pf-c-input-group input,
+.pf-c-input-group .pf-c-form-control,
+.input-group input {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Password toggle button */
+.pf-c-input-group .pf-c-button,
+.pf-c-input-group button,
+.input-group button,
+.pf-c-button.pf-m-control,
+button[aria-label*="password"],
+button[aria-label*="Show"],
+button[aria-label*="Hide"],
+button[type="button"] {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border: none !important;
+  border-left: none !important;
+  cursor: pointer;
+  padding: 0.5rem !important;
+  box-shadow: none !important;
+}
+
+.pf-c-input-group .pf-c-button:hover,
+.pf-c-button.pf-m-control:hover,
+button[aria-label*="password"]:hover {
+  color: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* SVG icon inside toggle button */
+.pf-c-input-group button svg,
+.pf-c-button.pf-m-control svg,
+button[type="button"] svg {
+  fill: rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+.pf-c-form-control:focus,
+#password:focus,
+#username:focus {
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.pf-c-input-group:focus-within {
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* --- Browser Autofill Override --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(15, 11, 30, 0.95) inset !important;
+  box-shadow: 0 0 0 1000px rgba(15, 11, 30, 0.95) inset !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* --- Primary Button (Sign In) --- */
+input[type="submit"],
+#kc-login,
+.btn-primary,
+.pf-c-button.pf-m-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 0.8rem 1.5rem !important;
+  font-size: 0.938rem !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+  width: 100% !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+input[type="submit"]:hover,
+#kc-login:hover,
+.btn-primary:hover,
+.pf-c-button.pf-m-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5) !important;
+  background: linear-gradient(135deg, #818cf8, #a78bfa) !important;
+}
+
+input[type="submit"]:active,
+.btn-primary:active {
+  transform: translateY(0) !important;
+}
+
+/* --- Secondary/Link Buttons --- */
+.btn-default,
+.pf-c-button.pf-m-secondary {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 14px !important;
+  padding: 0.7rem 1.5rem !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  transition: all 0.25s ease !important;
+}
+
+.btn-default:hover,
+.pf-c-button.pf-m-secondary:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* --- Links --- */
+a,
+.pf-c-button.pf-m-link,
+#kc-registration a,
+.kc-social-links a {
+  color: #a5b4fc !important;
+  text-decoration: none !important;
+  font-family: 'Inter', sans-serif !important;
+  transition: color 0.2s ease !important;
+}
+
+a:hover {
+  color: #c7d2fe !important;
+  text-decoration: underline !important;
+}
+
+/* --- Checkbox / Remember me --- */
+#kc-form-options {
+  margin-top: 0.75rem;
+}
+
+#kc-form-options label,
+.checkbox label {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 0.813rem !important;
+}
+
+/* --- Alerts / Error Messages --- */
+.alert,
+.pf-c-alert,
+.kc-feedback-text {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  border-radius: 12px !important;
+  color: #fca5a5 !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.alert-success,
+.pf-m-success {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  color: #86efac !important;
+}
+
+.alert-warning {
+  background: rgba(234, 179, 8, 0.15) !important;
+  border-color: rgba(234, 179, 8, 0.3) !important;
+  color: #fde047 !important;
+}
+
+/* --- Password visibility toggle --- */
+.pf-c-button.pf-m-control,
+button[aria-label*="password"] {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border: none !important;
+}
+
+/* --- Social Login Buttons --- */
+.kc-social-provider {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 0.7rem !important;
+  margin-bottom: 0.5rem !important;
+  transition: all 0.25s ease !important;
+}
+
+.kc-social-provider:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- Footer area --- */
+#kc-info,
+#kc-info-wrapper {
+  text-align: center !important;
+  margin-top: 1rem !important;
+}
+
+#kc-info a,
+#kc-info-wrapper a {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 0.85rem !important;
+}
+
+#kc-info a:hover {
+  color: #a5b4fc !important;
+}
+
+/* --- Misc overrides --- */
+.login-pf,
+.login-pf body {
+  background: #0f0b1e !important;
+}
+
+/* Remove default keycloak background images */
+.login-pf .container {
+  background: none !important;
+  padding: 0 !important;
+}
+
+/* Fix form-group spacing */
+.form-group,
+.pf-c-form__group {
+  margin-bottom: 1rem !important;
+}
+
+/* Remove any leftover borders from PatternFly */
+.pf-c-login__main,
+.pf-c-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Scrollbar styling for consistency */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+/* ============================================
+   AUTH PAGE — Premium Glassmorphism Theme
+   ============================================ */
+
+/* --- Full-screen layout --- */
+.auth-page {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  background: #0f0b1e;
+}
+
+/* --- Animated background orbs --- */
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.auth-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  animation: float 12s ease-in-out infinite;
+}
+
+.auth-bg-orb--1 {
+  width: 420px;
+  height: 420px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  top: -80px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.auth-bg-orb--2 {
+  width: 360px;
+  height: 360px;
+  background: linear-gradient(135deg, #ec4899, #f43f5e);
+  bottom: -60px;
+  right: -80px;
+  animation-delay: -4s;
+}
+
+.auth-bg-orb--3 {
+  width: 280px;
+  height: 280px;
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  top: 50%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  animation-delay: -8s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  33% { transform: translateY(-30px) scale(1.05); }
+  66% { transform: translateY(20px) scale(0.95); }
+}
+
+/* Subtle grid overlay */
+.auth-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* --- Glass Card --- */
+.auth-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  margin: 1rem;
+  padding: 2.5rem 2rem;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- Brand / Logo --- */
+.auth-brand {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1rem;
+  animation: logoPulse 3s ease-in-out infinite;
+}
+
+.auth-logo svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 6px 20px rgba(99, 102, 241, 0.6)); }
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe, #a5b4fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+}
+
+.auth-subtitle {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* --- Divider --- */
+.auth-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  margin: 1.5rem 0;
+}
+
+/* --- Features row --- */
+.auth-features {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.auth-feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.auth-feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.auth-feature-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: rgba(255, 255, 255, 0.6);
+}
+
+.auth-feature:hover .auth-feature-icon {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+}
+
+.auth-feature:hover .auth-feature-icon svg {
+  fill: #a5b4fc;
+}
+
+.auth-feature span {
+  font-size: 0.688rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* --- Footer --- */
+.auth-footer {
+  text-align: center;
+  margin-top: 1.75rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.25);
+  margin-bottom: 0;
+}
+/* --- Fix for Chrome Autofill background --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #241d3d inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* --- Fix for Alert Error box overlapping --- */
+.alert, .pf-v5-c-alert, .pf-c-alert {
+    position: relative !important;
+    display: block !important;
+    clear: both !important;
+    margin-bottom: 1rem !important;
+}
+
+/* --- Fix for Password toggle border --- */
+.pf-c-input-group,
+.pf-v5-c-input-group,
+.input-group {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.pf-c-input-group input,
+.pf-v5-c-input-group input,
+.input-group input {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    flex: 1 !important;
+}
+
+.pf-c-input-group button,
+.pf-v5-c-input-group button {
+    border: none !important;
+    background: transparent !important;
+}
