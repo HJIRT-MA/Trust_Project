@@ -53,7 +53,15 @@ export class ChatComponent {
     this.aiResponse = null;
     this.hasSearched = false;
     this.ragService.getConversationMessages(id).subscribe(msgs => {
-      this.currentMessages = msgs;
+      this.currentMessages = msgs.map(msg => {
+        if (msg.claimAnalysis) {
+          try {
+            msg.claimAnalysis = JSON.parse(msg.claimAnalysis);
+          } catch (e) {}
+        }
+        msg.showAudit = false;
+        return msg;
+      });
     });
   }
 
@@ -72,6 +80,10 @@ export class ChatComponent {
     }
   }
 
+  toggleAudit(msg: any) {
+    msg.showAudit = !msg.showAudit;
+  }
+
   performSearch() {
     if (!this.searchQuery.trim()) return;
 
@@ -83,10 +95,8 @@ export class ChatComponent {
     const query = this.searchQuery;
     this.searchQuery = '';
 
-    // Add user message to UI optimistically if in an active conversation
-    if (this.currentConversationId) {
-      this.currentMessages.push({ role: 'USER', content: query });
-    }
+    // Add user message to UI optimistically
+    this.currentMessages.push({ role: 'USER', content: query });
 
     this.ragService.searchSemantic(query, 3).subscribe({
       next: (data) => {
@@ -107,7 +117,23 @@ export class ChatComponent {
           this.loadConversations();
         }
         
-        this.currentMessages.push({ role: 'AI', content: data.response });
+        // Parse claimAnalysis if present
+        let parsedAnalysis = null;
+        if (data.claimAnalysis) {
+          try {
+            parsedAnalysis = JSON.parse(data.claimAnalysis);
+          } catch (e) {
+            console.error('Error parsing claimAnalysis', e);
+          }
+        }
+        
+        this.currentMessages.push({ 
+          role: 'AI', 
+          content: data.response,
+          confidenceScore: data.confidenceScore,
+          claimAnalysis: parsedAnalysis,
+          showAudit: false
+        });
       },
       error : (err) => {
         console.error('Erreur de chat', err);

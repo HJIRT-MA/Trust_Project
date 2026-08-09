@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2->oauth2
                         .jwt(jwt->jwt.jwtAuthenticationConverter((jwtAuthenticationConverter()))))

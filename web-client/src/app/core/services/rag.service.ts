@@ -19,10 +19,16 @@ export class RagService {
     return this.http.post<ChunkResult[]>(`${this.apiUrl}/search`, { query, topK });
   }
 
-  chatSemantic(query: string,topK:number=3, conversationId?: number): Observable<{ response: string,
-    conversationId: number}>{
-    return this.http.post<{response: string, conversationId: number}>(`${this.apiUrl}/chat`, {query, topK,
-    conversationId});
+  chatSemantic(query: string, topK: number = 3, conversationId?: number): Observable<{
+    response: string,
+    conversationId: number,
+    confidenceScore?: number,
+    claimAnalysis?: string
+  }> {
+    return this.http.post<{ response: string, conversationId: number, confidenceScore?: number, claimAnalysis?: string }>(`${this.apiUrl}/chat`, {
+      query, topK,
+      conversationId
+    });
   }
 
   getConversations(): Observable<any[]> {

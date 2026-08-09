@@ -1,5 +1,7 @@
 package com.intern.trustai.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.intern.trustai.dto.ChunkResponse;
 import com.intern.trustai.dto.DashboardStatsDTO;
 import com.intern.trustai.dto.RequestHistoryItem;
@@ -59,12 +61,13 @@ public class RagPipelineServiceImp implements RagPipelineService {
     private final ChatLanguageModel chatLanguageModel;
     private final ConversationRepository conversationRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final HallucinationGuardService guardService;
 
     public RagPipelineServiceImp(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore,
                                  DocumentRepository documentRepository, ChunkRepository chunkRepository,
                                  SimpMessagingTemplate messagingTemplate, JdbcTemplate jdbcTemplate,
                                  ChatLanguageModel chatLanguageModel, ConversationRepository conversationRepository,
-                                 ChatMessageRepository chatMessageRepository) {
+                                 ChatMessageRepository chatMessageRepository, HallucinationGuardService guardService) {
         this.embeddingModel = embeddingModel;
         this.embeddingStore = embeddingStore;
         this.documentRepository = documentRepository;
@@ -74,6 +77,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
         this.chatLanguageModel = chatLanguageModel;
         this.conversationRepository = conversationRepository;
         this.chatMessageRepository = chatMessageRepository;
+        this.guardService = guardService;
         this.tika = new Tika();
     }
 
@@ -188,19 +192,38 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
         List<ChunkResponse> relevantChunks = searchSimilarChunks(userQuery, topK);
         String context = relevantChunks.stream().map(ChunkResponse::text).collect(Collectors.joining("\n\n"));
+
+        StringBuilder history = new StringBuilder();
+        if (conversation.getId() != null) {
+            List<ChatMessage> previousMessages = chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.getId());
+            // Keep the last 6 messages to avoid context window explosion
+            int startIndex = Math.max(0, previousMessages.size() - 6);
+            for (int i = startIndex; i < previousMessages.size(); i++) {
+                ChatMessage msg = previousMessages.get(i);
+                if (msg.getId() != null && !msg.getId().equals(userMessage.getId())) {
+                    history.append(msg.getRole()).append(": ").append(msg.getContent()).append("\n\n");
+                }
+            }
+        }
+
         String promptString = "You are a helpful and conversational AI assistant. " +
-                "Please answer the user's question in a friendly and natural conversational way, using only the provided context. " +
-                "If the answer is not contained in the context, politely let the user know that you don't have that information.\n\n" +
+                "Please answer the user's question in a friendly and natural conversational way, using the provided context and the conversation history. " +
+                "If the answer is not contained in the context or history, politely let the user know that you don't have that information.\n\n" +
+                "Conversation History:\n{{history}}\n" +
                 "Context:\n{{context}}\n\n" +
                 "Question: {{question}}";
 
         PromptTemplate promptTemplate = PromptTemplate.from(promptString);
 
         Map<String, Object> variables = new HashMap<>();
+        variables.put("history", history.toString().trim());
         variables.put("context", context);
         variables.put("question", userQuery);
 
         String aiResponse = chatLanguageModel.generate(promptTemplate.apply(variables).text());
+
+        // Verify claims (Hallucination Guard)
+        HallucinationGuardService.GuardResult guardResult = guardService.verifyClaims(context, aiResponse);
 
         // Estimate tokens (roughly 1 token = 4 chars)
         int estimatedTokens = aiResponse.length() / 4;
@@ -211,11 +234,15 @@ public class RagPipelineServiceImp implements RagPipelineService {
         aiMessage.setRole("AI");
         aiMessage.setContent(aiResponse);
         aiMessage.setTokensUsed(estimatedTokens);
+        aiMessage.setConfidenceScore(guardResult.getConfidenceScore());
+        aiMessage.setClaimAnalysis(guardResult.getClaimAnalysis());
         chatMessageRepository.save(aiMessage);
 
         Map<String, Object> result = new HashMap<>();
         result.put("response", aiResponse);
         result.put("conversationId", conversation.getId());
+        result.put("confidenceScore", guardResult.getConfidenceScore());
+        result.put("claimAnalysis", guardResult.getClaimAnalysis());
         return result;
     }
 
@@ -254,18 +281,46 @@ public class RagPipelineServiceImp implements RagPipelineService {
             Font userFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, java.awt.Color.BLUE);
             Font aiFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, new java.awt.Color(0, 153, 51));
             Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+            Font redFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 10, java.awt.Color.RED);
+            ObjectMapper mapper = new ObjectMapper();
 
             for (ChatMessage message : messages) {
                 String roleStr = message.getRole().equals("USER") ? "User" : "TrustAI";
-                Font roleFont = message.getRole().equals(roleStr) ? userFont : aiFont;
+                Font roleFont = message.getRole().equals("USER") ? userFont : aiFont;
 
-                Paragraph header = new Paragraph(roleStr + " - " + message.getCreatedAt().format(formatter), roleFont);
+                String headerText = roleStr + " - " + message.getCreatedAt().format(formatter);
+                if (message.getRole().equals("AI") && message.getConfidenceScore() != null) {
+                    headerText += " (Confidence: " + message.getConfidenceScore() + "%)";
+                }
+
+                Paragraph header = new Paragraph(headerText, roleFont);
                 header.setSpacingBefore(10);
                 document.add(header);
 
                 Paragraph content = new Paragraph(message.getContent(), contentFont);
-                content.setSpacingAfter(10);
+                content.setSpacingAfter(5);
                 document.add(content);
+
+                // Add claim analysis if available
+                if (message.getRole().equals("AI") && message.getClaimAnalysis() != null) {
+                    try {
+                        com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(message.getClaimAnalysis());
+                        com.fasterxml.jackson.databind.JsonNode claims = root.get("claims");
+                        if (claims != null && claims.isArray()) {
+                            for (com.fasterxml.jackson.databind.JsonNode claim : claims) {
+                                boolean isSupported = claim.has("isSupported") && claim.get("isSupported").asBoolean();
+                                if (!isSupported) {
+                                    String claimText = claim.has("text") ? claim.get("text").asText() : "Unknown claim";
+                                    Paragraph redWarning = new Paragraph("⚠️ Unsupported/Hallucinated Claim: " + claimText, redFont);
+                                    redWarning.setSpacingAfter(2);
+                                    document.add(redWarning);
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // Ignore parsing errors for PDF
+                    }
+                }
             }
             document.close();
             return baos.toByteArray();

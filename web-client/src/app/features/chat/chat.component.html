@@ -58,15 +58,65 @@
                  'bg-indigo-600 text-white': msg.role === 'USER',
                  'bg-[rgba(255,255,255,0.08)] text-white/90 border border-white/10': msg.role === 'AI'
                }">
-            <div class="flex items-center gap-2 mb-1" [class.justify-end]="msg.role === 'USER'">
-              <mat-icon class="text-sm" [class.text-indigo-200]="msg.role === 'USER'" [class.text-indigo-400]="msg.role === 'AI'">
-                {{ msg.role === 'USER' ? 'person' : 'smart_toy' }}
-              </mat-icon>
-              <span class="text-xs font-bold" [class.text-indigo-200]="msg.role === 'USER'" [class.text-indigo-400]="msg.role === 'AI'">
-                {{ msg.role === 'USER' ? 'Vous' : 'TrustAI' }}
-              </span>
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-2" [class.justify-end]="msg.role === 'USER'">
+                <mat-icon class="text-sm" [class.text-indigo-200]="msg.role === 'USER'" [class.text-indigo-400]="msg.role === 'AI'">
+                  {{ msg.role === 'USER' ? 'person' : 'smart_toy' }}
+                </mat-icon>
+                <span class="text-xs font-bold" [class.text-indigo-200]="msg.role === 'USER'" [class.text-indigo-400]="msg.role === 'AI'">
+                  {{ msg.role === 'USER' ? 'Vous' : 'TrustAI' }}
+                </span>
+              </div>
+              
+              <!-- Confidence Score Badge -->
+              @if (msg.role === 'AI' && msg.confidenceScore !== undefined) {
+                <div class="flex items-center gap-2">
+                  <div class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                       [ngClass]="{
+                         'bg-green-500/20 text-green-400 border-green-500/30': msg.confidenceScore === 100,
+                         'bg-yellow-500/20 text-yellow-400 border-yellow-500/30': msg.confidenceScore >= 50 && msg.confidenceScore < 100,
+                         'bg-red-500/20 text-red-400 border-red-500/30': msg.confidenceScore < 50
+                       }">
+                    Confiance: {{ msg.confidenceScore }}%
+                  </div>
+                  @if (msg.claimAnalysis) {
+                    <button (click)="toggleAudit(msg)" class="text-white/50 hover:text-white/90 transition-colors" title="Détails de l'audit">
+                      <mat-icon class="text-[16px] h-[16px] w-[16px]">{{ msg.showAudit ? 'expand_less' : 'policy' }}</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
             </div>
+            
             <p class="m-0 whitespace-pre-wrap">{{ msg.content }}</p>
+            
+            <!-- Audit Panel -->
+            @if (msg.role === 'AI' && msg.showAudit && msg.claimAnalysis) {
+              <div class="mt-4 p-3 bg-black/20 rounded-lg border border-white/5 text-sm">
+                <div class="text-xs text-white/50 font-bold mb-2 uppercase tracking-wider flex items-center gap-1">
+                  <mat-icon class="text-[14px] h-[14px] w-[14px]">fact_check</mat-icon> Audit des affirmations
+                </div>
+                <div class="space-y-2">
+                  @for (claim of msg.claimAnalysis.claims; track $index) {
+                    <div class="flex gap-2 items-start p-2 rounded" 
+                         [ngClass]="claim.isSupported ? 'bg-green-500/10 border-l-2 border-green-500' : 'bg-red-500/10 border-l-2 border-red-500'">
+                      <mat-icon class="text-[16px] h-[16px] w-[16px] mt-0.5" 
+                                [ngClass]="claim.isSupported ? 'text-green-400' : 'text-red-400'">
+                        {{ claim.isSupported ? 'check_circle' : 'cancel' }}
+                      </mat-icon>
+                      <div>
+                        <p class="m-0 text-white/90 leading-tight" [ngClass]="{'line-through opacity-75': !claim.isSupported && false}">
+                          {{ claim.text }}
+                        </p>
+                        @if (!claim.isSupported) {
+                          <span class="text-[10px] text-red-400 font-bold uppercase mt-1 inline-block">Non supporté (Hallucination)</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </div>
       }
@@ -86,8 +136,21 @@
       
       @if (isSearching) {
         <div class="flex">
-          <div class="bg-[rgba(255,255,255,0.08)] rounded-2xl p-4 border border-white/10 w-32">
-            <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+          <div class="max-w-[80%] rounded-2xl p-4 bg-[rgba(255,255,255,0.08)] text-white/90 border border-white/10">
+            <div class="flex items-center gap-3">
+              <mat-icon class="text-indigo-400 animate-pulse">smart_toy</mat-icon>
+              <div class="flex flex-col">
+                <span class="text-xs font-bold text-indigo-400 mb-1">TrustAI</span>
+                <span class="text-sm text-white/60 flex items-center gap-2">
+                  Génération et vérification des sources en cours
+                  <span class="flex gap-1 ml-1">
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       }

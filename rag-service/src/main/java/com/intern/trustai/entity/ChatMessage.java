@@ -32,6 +32,12 @@ public class ChatMessage {
     @Column(name = "tokens_used")
     private Integer tokensUsed = 0;
 
+    @Column(name = "confidence_score")
+    private Integer confidenceScore;
+
+    @Column(name = "claim_analysis", columnDefinition = "TEXT")
+    private String claimAnalysis;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }
