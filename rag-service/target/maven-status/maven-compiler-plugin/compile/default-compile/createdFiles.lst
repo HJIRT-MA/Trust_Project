@@ -21,6 +21,7 @@ com\intern\trustai\config\WebSocketConfig$1.class
 com\intern\trustai\dto\DashboardStatsDTO.class
 com\intern\trustai\repository\ConversationRepository.class
 com\intern\trustai\repository\DocumentRepository.class
+com\intern\trustai\service\RagPipelineServiceImp$1.class
 com\intern\trustai\repository\ChunkRepository.class
 com\intern\trustai\service\HallucinationGuardService$GuardResult.class
 com\intern\trustai\dto\RequestHistoryItem.class

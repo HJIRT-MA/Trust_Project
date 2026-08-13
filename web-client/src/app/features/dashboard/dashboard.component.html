@@ -54,8 +54,13 @@
         </div>
       </div>
 
-      <!-- Charts Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      </div>
+
+      <!-- Tabs Section -->
+      <mat-tab-group class="mt-6" mat-stretch-tabs="false" mat-align-tabs="start" animationDuration="0ms">
+        <mat-tab label="Aperçu Global">
+          <!-- Charts Section -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <!-- Line Chart -->
         <div class="bg-[rgba(255,255,255,0.07)] rounded-2xl border border-white/10 p-6">
           <h2 class="text-lg font-semibold text-white/80 mb-4">Évolution des requêtes</h2>
@@ -89,9 +94,27 @@
               [options]="histogramChartOptions"
               type="bar">
             </canvas>
+            </div>
           </div>
-        </div>
-      </div>
+        </mat-tab>
+
+        <mat-tab label="Audit & Fiabilité">
+          <div class="grid grid-cols-1 gap-6 mt-6">
+            <!-- Line Chart Reliability -->
+            <div class="bg-[rgba(255,255,255,0.07)] rounded-2xl border border-white/10 p-6">
+              <h2 class="text-lg font-semibold text-white/80 mb-4">Évolution de la Fiabilité (Score IA Moyen)</h2>
+              <div class="h-64">
+                <canvas baseChart
+                  [data]="reliabilityChartData"
+                  [options]="reliabilityChartOptions"
+                  type="line">
+                </canvas>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+
     </ng-container>
 
     <!-- Document Manager -->

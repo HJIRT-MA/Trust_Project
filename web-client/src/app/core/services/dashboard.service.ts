@@ -7,9 +7,18 @@ export interface DashboardStats{
   totalDocuments: number;
   totalRequests: number;
   totalTokens: number;
-  requestsHistory: {date: string, count:number}[];
-  tokenDistribution: {model: string, tokens:number}[];
-
+  requestsHistory: {
+    date: string;
+    count: number;
+  }[];
+  tokenDistribution: {
+    model: string;
+    tokens: number;
+  }[];
+  reliabilityHistory: {
+    date: string;
+    averageScore: number;
+  }[];
 }
 
 

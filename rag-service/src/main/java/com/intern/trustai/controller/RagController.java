@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -136,6 +137,22 @@ public class RagController {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(id));
+    }
+
+    @DeleteMapping("/conversations/{id}")
+    @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
+    @Transactional
+    public ResponseEntity<String> deleteConversation(@PathVariable("id") Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+        Conversation conversation = conversationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        if (!conversation.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        chatMessageRepository.deleteByConversationId(id);
+        conversationRepository.delete(conversation);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/conversations/{id}/pdf")

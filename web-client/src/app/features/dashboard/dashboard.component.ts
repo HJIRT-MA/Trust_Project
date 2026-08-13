@@ -6,10 +6,12 @@ import {DashboardService, DashboardStats} from "../../core/services/dashboard.se
 import {ChartConfiguration, ChartOptions} from "chart.js";
 
 
+import {MatTabsModule} from "@angular/material/tabs";
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DocumentManagerComponent, BaseChartDirective],
+  imports: [CommonModule, DocumentManagerComponent, BaseChartDirective, MatTabsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -38,6 +40,34 @@ export class DashboardComponent implements OnInit{
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false }
+    }
+  };
+
+  public reliabilityChartData: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets : [
+      {
+        data: [],
+        label: 'Score Moyen (%)',
+        fill: true,
+        tension: 0.4,
+        borderColor: '#10b981', // Emerald-500
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+      }
+    ]
+  };
+
+  public reliabilityChartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      y: {
+        min: 0,
+        max: 100
+      }
     }
   };
 
@@ -97,6 +127,11 @@ export class DashboardComponent implements OnInit{
 
         this.requestsChartData.labels = data.requestsHistory.map(h=> h.date);
         this.requestsChartData.datasets[0].data = data.requestsHistory.map(h => h.count);
+        
+        if (data.reliabilityHistory) {
+          this.reliabilityChartData.labels = data.reliabilityHistory.map(h => h.date);
+          this.reliabilityChartData.datasets[0].data = data.reliabilityHistory.map(h => h.averageScore);
+        }
 
         this.tokensChartData.labels = data.tokenDistribution.map(t => t.model);
         this.tokensChartData.datasets[0].data = data.tokenDistribution.map(t => t.tokens);

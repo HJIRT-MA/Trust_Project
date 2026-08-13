@@ -6,6 +6,8 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
@@ -51,13 +53,21 @@ public class RagConfig {
                 .build();
     }
 
-   @Bean
+    @Bean
     public ChatLanguageModel chatLanguageModel() {
         return OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3.2:3b")
+                .modelName("llama3:latest")
                 .timeout(Duration.ofMinutes(5))
                 .build();
    }
 
+    @Bean
+    public StreamingChatLanguageModel streamingChatLanguageModel() {
+        return OllamaStreamingChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("llama3:latest")
+                .timeout(Duration.ofMinutes(5))
+                .build();
+    }
 }

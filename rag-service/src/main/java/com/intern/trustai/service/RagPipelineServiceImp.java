@@ -19,6 +19,7 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.input.PromptTemplate;
 import java.util.Map;
 import java.util.HashMap;
@@ -59,15 +60,18 @@ public class RagPipelineServiceImp implements RagPipelineService {
     private final Tika tika;
     private final JdbcTemplate jdbcTemplate;
     private final ChatLanguageModel chatLanguageModel;
+    private final StreamingChatLanguageModel streamingChatLanguageModel;
     private final ConversationRepository conversationRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final HallucinationGuardService guardService;
+    private final KafkaProducerService kafkaProducerService;
 
     public RagPipelineServiceImp(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore,
                                  DocumentRepository documentRepository, ChunkRepository chunkRepository,
                                  SimpMessagingTemplate messagingTemplate, JdbcTemplate jdbcTemplate,
-                                 ChatLanguageModel chatLanguageModel, ConversationRepository conversationRepository,
-                                 ChatMessageRepository chatMessageRepository, HallucinationGuardService guardService) {
+                                 ChatLanguageModel chatLanguageModel, StreamingChatLanguageModel streamingChatLanguageModel, ConversationRepository conversationRepository,
+                                 ChatMessageRepository chatMessageRepository, HallucinationGuardService guardService,
+                                 KafkaProducerService kafkaProducerService) {
         this.embeddingModel = embeddingModel;
         this.embeddingStore = embeddingStore;
         this.documentRepository = documentRepository;
@@ -75,9 +79,11 @@ public class RagPipelineServiceImp implements RagPipelineService {
         this.messagingTemplate = messagingTemplate;
         this.jdbcTemplate = jdbcTemplate;
         this.chatLanguageModel = chatLanguageModel;
+        this.streamingChatLanguageModel = streamingChatLanguageModel;
         this.conversationRepository = conversationRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.guardService = guardService;
+        this.kafkaProducerService = kafkaProducerService;
         this.tika = new Tika();
     }
 
@@ -101,7 +107,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
             sendProgress(20, "Texte extrait, découpage en chunks...");
 
-            DocumentSplitter splitter = DocumentSplitters.recursive(500, 50);
+            DocumentSplitter splitter = DocumentSplitters.recursive(1000, 200);
             List<TextSegment> segments = splitter.split(document);
 
             int totalSegments = segments.size();
@@ -206,9 +212,9 @@ public class RagPipelineServiceImp implements RagPipelineService {
             }
         }
 
-        String promptString = "You are a helpful and conversational AI assistant. " +
-                "Please answer the user's question in a friendly and natural conversational way, using the provided context and the conversation history. " +
-                "If the answer is not contained in the context or history, politely let the user know that you don't have that information.\n\n" +
+        String promptString = "You are a precise AI assistant. You must answer the user's question ONLY using the provided context. " +
+                "If the context does not contain the answer, you must state that you don't have the information. Do not invent or guess.\n" +
+                "IMPORTANT DISTINCTION: If the user asks about 'languages' or 'langues', explicitly differentiate between spoken/human languages (e.g., Arabic, French, English) and programming languages (e.g., Java, Python). Answer based precisely on what is asked.\n\n" +
                 "Conversation History:\n{{history}}\n" +
                 "Context:\n{{context}}\n\n" +
                 "Question: {{question}}";
@@ -220,29 +226,78 @@ public class RagPipelineServiceImp implements RagPipelineService {
         variables.put("context", context);
         variables.put("question", userQuery);
 
-        String aiResponse = chatLanguageModel.generate(promptTemplate.apply(variables).text());
+        String promptText = promptTemplate.apply(variables).text();
+        Long convId = conversation.getId();
+        final Conversation finalConversation = conversation;
+        final String currentTenant = TenantContext.getCurrentTenant();
 
-        // Verify claims (Hallucination Guard)
-        HallucinationGuardService.GuardResult guardResult = guardService.verifyClaims(context, aiResponse);
+        streamingChatLanguageModel.generate(promptText, new dev.langchain4j.model.StreamingResponseHandler<dev.langchain4j.data.message.AiMessage>() {
+            private StringBuilder fullResponseBuilder = new StringBuilder();
 
-        // Estimate tokens (roughly 1 token = 4 chars)
-        int estimatedTokens = aiResponse.length() / 4;
+            @Override
+            public void onNext(String token) {
+                fullResponseBuilder.append(token);
+                // Safe JSON escaping for the token
+                String escapedToken = token.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
+                messagingTemplate.convertAndSend("/topic/chat/" + convId, "{\"type\": \"token\", \"token\": \"" + escapedToken + "\"}");
+            }
 
-        // Save AI message
-        ChatMessage aiMessage = new ChatMessage();
-        aiMessage.setConversation(conversation);
-        aiMessage.setRole("AI");
-        aiMessage.setContent(aiResponse);
-        aiMessage.setTokensUsed(estimatedTokens);
-        aiMessage.setConfidenceScore(guardResult.getConfidenceScore());
-        aiMessage.setClaimAnalysis(guardResult.getClaimAnalysis());
-        chatMessageRepository.save(aiMessage);
+            @Override
+            public void onComplete(dev.langchain4j.model.output.Response<dev.langchain4j.data.message.AiMessage> response) {
+                String aiResponse = fullResponseBuilder.toString();
+                // Estimate tokens
+                int estimatedTokens = aiResponse.length() / 4;
+
+                // Save AI message first to get the ID
+                ChatMessage aiMessage = new ChatMessage();
+                aiMessage.setConversation(finalConversation);
+                aiMessage.setRole("AI");
+                aiMessage.setContent(aiResponse);
+                aiMessage.setTokensUsed(estimatedTokens);
+                aiMessage = chatMessageRepository.save(aiMessage);
+
+                // Notify frontend that verification started
+                try {
+                    messagingTemplate.convertAndSend("/topic/chat/" + convId, "{\"type\": \"verifying\"}");
+                } catch (Exception e) {}
+
+                // Verify claims (Hallucination Guard) using pgvector
+                HallucinationGuardService.GuardResult guardResult = guardService.verifyClaims(aiResponse, aiMessage.getId(), currentTenant);
+
+                // Update AI message with results
+                aiMessage.setConfidenceScore(guardResult.getConfidenceScore());
+                aiMessage.setClaimAnalysis(guardResult.getClaimAnalysis());
+                chatMessageRepository.save(aiMessage);
+
+                // Publish Kafka event if hallucination detected (score < 50)
+                if (guardResult.getConfidenceScore() < 50) {
+                    try {
+                        kafkaProducerService.sendHallucinationAlert(aiMessage.getId(), finalConversation.getUserId(), guardResult.getConfidenceScore());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    String safeClaim = guardResult.getClaimAnalysis() != null ? mapper.writeValueAsString(guardResult.getClaimAnalysis()) : "null";
+                    String payload = String.format("{\"type\": \"complete\", \"confidenceScore\": %s, \"claimAnalysis\": %s}", 
+                            guardResult.getConfidenceScore(), safeClaim);
+                    messagingTemplate.convertAndSend("/topic/chat/" + convId, payload);
+                } catch(Exception e) {
+                    messagingTemplate.convertAndSend("/topic/chat/" + convId, "{\"type\": \"complete\", \"confidenceScore\": null, \"claimAnalysis\": null}");
+                }
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                error.printStackTrace();
+                messagingTemplate.convertAndSend("/topic/chat/" + convId, "{\"type\": \"error\", \"message\": \"Stream error\"}");
+            }
+        });
 
         Map<String, Object> result = new HashMap<>();
-        result.put("response", aiResponse);
-        result.put("conversationId", conversation.getId());
-        result.put("confidenceScore", guardResult.getConfidenceScore());
-        result.put("claimAnalysis", guardResult.getClaimAnalysis());
+        result.put("conversationId", convId);
         return result;
     }
 
@@ -253,8 +308,9 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
         List<RequestHistoryItem> history = chatMessageRepository.countRequestsPerDay();
         List<TokenDistributionItem> distribution = List.of(new TokenDistributionItem("Llama 3",  totalTokens));
+        List<com.intern.trustai.dto.ReliabilityStatItem> reliability = chatMessageRepository.averageScorePerDay();
 
-        return new DashboardStatsDTO(totalDocs, totalRequests, totalTokens, history, distribution);
+        return new DashboardStatsDTO(totalDocs, totalRequests, totalTokens, history, distribution, reliability);
     }
 
 

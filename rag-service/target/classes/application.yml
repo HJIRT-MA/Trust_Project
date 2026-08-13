@@ -30,3 +30,9 @@ spring:
 openai:
   api:
     key: "sk-dummy-key"
+
+trustai:
+  hallucination:
+    threshold:
+      verified: 0.80
+      uncertain: 0.60

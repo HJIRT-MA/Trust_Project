@@ -8,6 +8,11 @@ spring:
       max-request-size: 50MB
   application:
     name: rag-service
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   datasource:
     url: jdbc:postgresql://localhost:5432/trustaidb
     username: trustai_user
@@ -30,3 +35,9 @@ spring:
 openai:
   api:
     key: "sk-dummy-key"
+
+trustai:
+  hallucination:
+    threshold:
+      verified: 0.80
+      uncertain: 0.60

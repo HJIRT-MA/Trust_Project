@@ -14,5 +14,5 @@ public class DashboardStatsDTO {
     private long totalTokens;
     private List<RequestHistoryItem> requestsHistory;
     private List<TokenDistributionItem> tokenDistribution;
-
+    private List<ReliabilityStatItem> reliabilityHistory;
 }

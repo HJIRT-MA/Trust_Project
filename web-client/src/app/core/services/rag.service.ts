@@ -39,6 +39,10 @@ export class RagService {
     return this.http.get<any[]>(`${this.apiUrl}/conversations/${id}`);
   }
 
+  deleteConversation(id:number): Observable<void>{
+    return this.http.delete<void>(`${this.apiUrl}/conversations/${id}`)
+  }
+
   downloadConversationPdf(id: number): void{
     this.http.get(`${this.apiUrl}/conversations/${id}/pdf`, {responseType: 'blob'}).subscribe(
       blob =>{
