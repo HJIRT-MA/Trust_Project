@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -103,6 +103,10 @@ export class ChatComponent implements OnInit {
     if (this.currentConversationId) {
       this.ragService.downloadConversationPdf(this.currentConversationId);
     }
+  }
+
+  downloadGuardPdf(messageId: number) {
+    this.ragService.downloadGuardReport(messageId);
   }
 
   toggleAudit(msg: any) {

@@ -7,19 +7,26 @@ import {ChartConfiguration, ChartOptions} from "chart.js";
 
 
 import {MatTabsModule} from "@angular/material/tabs";
+import {MatTableModule} from "@angular/material/table";
+import {MatIconModule} from "@angular/material/icon";
+import {MatButtonModule} from "@angular/material/button";
+import {RagService} from "../../core/services/rag.service";
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DocumentManagerComponent, BaseChartDirective, MatTabsModule],
+  imports: [CommonModule, DocumentManagerComponent, BaseChartDirective, MatTabsModule, MatTableModule, MatIconModule, MatButtonModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
 
 export class DashboardComponent implements OnInit{
   private dashboardService = inject(DashboardService);
+  private ragService = inject(RagService);
   stats: DashboardStats | null= null;
   loading = true;
+  reportsHistory: any[] = [];
+  displayedColumns: string[] = ['date', 'score', 'user', 'actions'];
 
   public requestsChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
@@ -142,12 +149,26 @@ export class DashboardComponent implements OnInit{
 
         this.loading = false;
 
+        this.loading = false;
       },
       error: (err) => {
         console.error('Failed to load dashboard stats', err);
         this.loading = false;
       }
-    })
+    });
+
+    this.ragService.getReportHistory().subscribe({
+      next: (data) => {
+        this.reportsHistory = data;
+      },
+      error: (err) => {
+        console.error('Failed to load report history', err);
+      }
+    });
+  }
+
+  downloadGuardPdf(messageId: number) {
+    this.ragService.downloadGuardReport(messageId);
   }
 
 

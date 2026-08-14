@@ -14,6 +14,7 @@ export interface ChunkResult {
 export class RagService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8082/api/rag';
+  private guardApiUrl = 'http://localhost:8082/api/guard';
 
   searchSemantic(query: string, topK: number = 3): Observable<ChunkResult[]> {
     return this.http.post<ChunkResult[]>(`${this.apiUrl}/search`, { query, topK });
@@ -53,5 +54,22 @@ export class RagService {
         a.click();
         window.URL.revokeObjectURL(url);
       });
+  }
+
+  getReportHistory(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.guardApiUrl}/reports`);
+  }
+
+  downloadGuardReport(id: number): void {
+    this.http.get(`${this.guardApiUrl}/report/${id}/pdf`, {responseType: 'blob'}).subscribe(
+      blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `guard_report_${id}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+    );
   }
 }

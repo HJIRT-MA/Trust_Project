@@ -89,6 +89,9 @@
                     <button (click)="toggleAudit(msg)" class="text-white/50 hover:text-white/90 transition-colors" title="Détails de l'audit">
                       <mat-icon class="text-[16px] h-[16px] w-[16px]">{{ msg.showAudit ? 'expand_less' : 'policy' }}</mat-icon>
                     </button>
+                    <button (click)="downloadGuardPdf(msg.id)" class="text-white/50 hover:text-white/90 transition-colors ml-1" title="Exporter le rapport PDF">
+                      <mat-icon class="text-[16px] h-[16px] w-[16px]">picture_as_pdf</mat-icon>
+                    </button>
                   }
                 </div>
               }

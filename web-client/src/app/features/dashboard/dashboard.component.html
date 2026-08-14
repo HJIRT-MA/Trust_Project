@@ -54,8 +54,6 @@
         </div>
       </div>
 
-      </div>
-
       <!-- Tabs Section -->
       <mat-tab-group class="mt-6" mat-stretch-tabs="false" mat-align-tabs="start" animationDuration="0ms">
         <mat-tab label="Aperçu Global">
@@ -96,6 +94,7 @@
             </canvas>
             </div>
           </div>
+        </div>
         </mat-tab>
 
         <mat-tab label="Audit & Fiabilité">
@@ -110,6 +109,45 @@
                   type="line">
                 </canvas>
               </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Historique des Rapports">
+          <div class="mt-6 bg-[rgba(255,255,255,0.07)] rounded-2xl border border-white/10 overflow-hidden">
+            <table mat-table [dataSource]="reportsHistory" class="w-full bg-transparent">
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef class="text-white/80 font-bold border-b border-white/10"> Date </th>
+                <td mat-cell *matCellDef="let element" class="text-white/60 border-b border-white/10"> {{element.createdAt | date:'short'}} </td>
+              </ng-container>
+
+              <ng-container matColumnDef="score">
+                <th mat-header-cell *matHeaderCellDef class="text-white/80 font-bold border-b border-white/10"> Score de Confiance </th>
+                <td mat-cell *matCellDef="let element" class="font-bold border-b border-white/10"
+                    [ngClass]="element.confidenceScore >= 80 ? 'text-emerald-400' : element.confidenceScore >= 50 ? 'text-amber-400' : 'text-red-400'">
+                  {{element.confidenceScore}}%
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="user">
+                <th mat-header-cell *matHeaderCellDef class="text-white/80 font-bold border-b border-white/10"> Utilisateur </th>
+                <td mat-cell *matCellDef="let element" class="text-white/60 border-b border-white/10"> {{element.userEmail}} </td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="text-white/80 font-bold border-b border-white/10"> Actions </th>
+                <td mat-cell *matCellDef="let element" class="border-b border-white/10">
+                  <button mat-icon-button (click)="downloadGuardPdf(element.messageId)" color="primary" title="Télécharger le PDF">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-white/5 transition-colors"></tr>
+            </table>
+            <div *ngIf="reportsHistory.length === 0" class="p-4 text-center text-white/50">
+              Aucun rapport généré pour le moment.
             </div>
           </div>
         </mat-tab>
