@@ -15,6 +15,12 @@ export const routes: Routes = [
     data: { roles: ['admin'] } // Exemple de rôle requis pour le dashboard
   },
   {
+    path: 'audit',
+    loadComponent: () => import('./features/audit/audit.component').then(m => m.AuditComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin'] } 
+  },
+  {
     path: '',
     redirectTo: 'chat',
     pathMatch: 'full' // Redirige vers /chat par défaut

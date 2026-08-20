@@ -1,0 +1,122 @@
+<div class="h-full flex flex-col p-6 space-y-6 max-w-5xl mx-auto w-full">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+        Smart Contract Auditor
+      </h1>
+      <p class="text-gray-400 mt-2 text-sm">
+        Uploadez un fichier Solidity (.sol) pour extraire automatiquement son AST et sa structure.
+      </p>
+    </div>
+  </div>
+
+  <!-- Drag and Drop Zone -->
+  <mat-card class="bg-white/5 border border-white/10 shadow-xl rounded-2xl p-4">
+    <mat-card-content>
+      <ngx-file-drop 
+        dropZoneLabel="Glissez-déposez un fichier .sol ici" 
+        (onFileDrop)="dropped($event)" 
+        (onFileOver)="fileOver($event)" 
+        (onFileLeave)="fileLeave($event)"
+        contentClassName="h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 rounded-xl border-2 border-dashed border-indigo-500/50 transition-colors text-indigo-200">
+        <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
+          <div class="flex flex-col items-center gap-2" (click)="openFileSelector()">
+            <mat-icon class="scale-150 text-indigo-400 mb-2">cloud_upload</mat-icon>
+            <span class="font-medium text-lg">Glissez-déposez un fichier .sol ici</span>
+            <span class="text-sm text-gray-400">ou cliquez pour parcourir</span>
+          </div>
+        </ng-template>
+      </ngx-file-drop>
+
+      <div *ngIf="uploadError" class="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 flex items-center gap-2">
+        <mat-icon>error_outline</mat-icon>
+        {{ uploadError }}
+      </div>
+
+      <div *ngIf="isUploading" class="mt-6 flex flex-col items-center justify-center space-y-3">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span class="text-gray-300 animate-pulse">Analyse du contrat en cours...</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Parsed Structure Display -->
+  <div *ngIf="parsedStructure && !isUploading" class="animate-fade-in pb-10">
+    <h2 class="text-2xl font-semibold mb-4 text-white flex items-center gap-2">
+      <mat-icon class="text-green-400">check_circle</mat-icon>
+      Analyse de <span class="text-indigo-400">{{ parsedStructure.contractName || 'Contrat Inconnu' }}</span>
+    </h2>
+
+    <mat-accordion multi="true" class="space-y-4">
+      
+      <!-- Functions -->
+      <mat-expansion-panel [expanded]="true" class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
+        <mat-expansion-panel-header>
+          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+            <mat-icon class="text-blue-400">code</mat-icon> 
+            Fonctions ({{ parsedStructure.functions?.length || 0 }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        
+        <div class="flex flex-col gap-3 pt-2">
+          <div *ngIf="!parsedStructure.functions?.length" class="text-gray-400 italic">Aucune fonction détectée.</div>
+          <div *ngFor="let func of parsedStructure.functions" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+            <pre><code [highlight]="func" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Modifiers -->
+      <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
+        <mat-expansion-panel-header>
+          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+            <mat-icon class="text-purple-400">tune</mat-icon> 
+            Modifiers ({{ parsedStructure.modifiers?.length || 0 }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        
+        <div class="flex flex-col gap-3 pt-2">
+          <div *ngIf="!parsedStructure.modifiers?.length" class="text-gray-400 italic">Aucun modifier détecté.</div>
+          <div *ngFor="let mod of parsedStructure.modifiers" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+            <pre><code [highlight]="mod" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Events -->
+      <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
+        <mat-expansion-panel-header>
+          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+            <mat-icon class="text-yellow-400">notifications_active</mat-icon> 
+            Events ({{ parsedStructure.events?.length || 0 }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        
+        <div class="flex flex-col gap-3 pt-2">
+          <div *ngIf="!parsedStructure.events?.length" class="text-gray-400 italic">Aucun event détecté.</div>
+          <div *ngFor="let evt of parsedStructure.events" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+            <pre><code [highlight]="evt" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- State Variables -->
+      <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+        <mat-expansion-panel-header>
+          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+            <mat-icon class="text-emerald-400">data_object</mat-icon> 
+            Variables d'état ({{ parsedStructure.stateVariables?.length || 0 }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        
+        <div class="flex flex-col gap-3 pt-2">
+          <div *ngIf="!parsedStructure.stateVariables?.length" class="text-gray-400 italic">Aucune variable d'état détectée.</div>
+          <div *ngFor="let stateVar of parsedStructure.stateVariables" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+            <pre><code [highlight]="stateVar" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+    </mat-accordion>
+  </div>
+</div>

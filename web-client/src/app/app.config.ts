@@ -10,6 +10,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { KeycloakAngularModule, KeycloakService } from 'keycloak-angular';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
+import { HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
+
 export function initializeKeycloak(keycloak: KeycloakService, platformId: Object) {
   return () => {
     if (isPlatformBrowser(platformId)) {
@@ -42,6 +44,16 @@ export const appConfig: ApplicationConfig = {
       useFactory: initializeKeycloak,
       multi: true,
       deps: [KeycloakService, PLATFORM_ID]
+    },
+    {
+      provide: HIGHLIGHT_OPTIONS,
+      useValue: {
+        coreLibraryLoader: () => import('highlight.js/lib/core'),
+        languages: {
+          // @ts-ignore
+          solidity: () => import('highlightjs-solidity')
+        }
+      }
     }
   ]
 };

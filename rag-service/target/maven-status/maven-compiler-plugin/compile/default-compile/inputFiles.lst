@@ -1,9 +1,11 @@
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\config\RagConfig.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\config\SecuritySignatureConfig.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\config\WebSocketConfig.java
+C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\controller\AuditController.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\controller\GuardController.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\controller\RagController.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\dto\ChunkResponse.java
+C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\dto\ContractStructureDTO.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\dto\DashboardStatsDTO.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\dto\ReliabilityStatItem.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\dto\ReportHistoryDTO.java
@@ -15,6 +17,7 @@ C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\e
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\entity\Document.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\entity\HallucinationCheck.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\entity\ReportSignature.java
+C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\entity\SmartContract.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\RagServiceApplication.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\repository\ChatMessageRepository.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\repository\ChunkRepository.java
@@ -22,11 +25,13 @@ C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\r
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\repository\DocumentRepository.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\repository\HallucinationCheckRepository.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\repository\ReportSignatureRepository.java
+C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\repository\SmartContractRepository.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\security\KeycloakRoleConverter.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\security\SecurityConfig.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\security\TenantAspect.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\security\TenantContext.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\security\TenantFilter.java
+C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\service\AuditService.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\service\HallucinationGuardService.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\service\KafkaProducerService.java
 C:\Users\pc\Desktop\trustai-chain\rag-service\src\main\java\com\intern\trustai\service\PdfReportService.java

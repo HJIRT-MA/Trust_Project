@@ -72,4 +72,10 @@ export class RagService {
       }
     );
   }
+
+  uploadSmartContract(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`http://localhost:8082/api/audit/upload`, formData);
+  }
 }
