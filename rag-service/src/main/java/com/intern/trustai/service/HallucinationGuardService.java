@@ -40,12 +40,6 @@ public class HallucinationGuardService {
     private final ChatMessageRepository chatMessageRepository;
     private final DocumentRepository documentRepository;
 
-    @Value("${trustai.hallucination.threshold.verified:0.80}")
-    private double verifiedThreshold;
-
-    @Value("${trustai.hallucination.threshold.uncertain:0.60}")
-    private double uncertainThreshold;
-
     public HallucinationGuardService(ChatLanguageModel chatLanguageModel,
                                      EmbeddingModel embeddingModel,
                                      EmbeddingStore<TextSegment> embeddingStore,
@@ -121,6 +115,7 @@ public class HallucinationGuardService {
                     double maxScore = 0.0;
                     String bestDocIdStr = null;
                     List<Map<String, Object>> chunksData = new ArrayList<>();
+                    StringBuilder contextBuilder = new StringBuilder();
                     
                     for (var match : searchResult.matches()) {
                         if (match.score() > maxScore) {
@@ -131,20 +126,62 @@ public class HallucinationGuardService {
                         chunkInfo.put("text", match.embedded().text());
                         chunkInfo.put("score", match.score());
                         chunksData.add(chunkInfo);
+                        
+                        contextBuilder.append("- ").append(match.embedded().text()).append("\n");
                     }
                     
-                    String status;
+                    // LLM-as-a-Judge Evaluation
+                    String judgePrompt = "You are a strict compliance judge. Determine if the Claim is factually supported by the Context.\n" +
+                            "Context:\n" + contextBuilder.toString() + "\n" +
+                            "Claim: " + text + "\n\n" +
+                            "Output ONLY a valid JSON object in the exact format below, with no markdown or extra text:\n" +
+                            "{\n" +
+                            "  \"status\": \"VÉRIFIÉ\",\n" +
+                            "  \"reasoning\": \"Brief explanation of why\"\n" +
+                            "}\n\n" +
+                            "RULES FOR STATUS:\n" +
+                            "- Use \"VÉRIFIÉ\" if the context fully supports the claim.\n" +
+                            "- Use \"NON VÉRIFIÉ\" if the context contradicts the claim or does not contain the information.\n" +
+                            "- Use \"INCERTAIN\" if it is ambiguous.";
+                    
+                    String judgeJson = chatLanguageModel.generate(judgePrompt);
+                    
+                    if (judgeJson.startsWith("```json")) {
+                        judgeJson = judgeJson.substring(7);
+                    } else if (judgeJson.startsWith("```")) {
+                        judgeJson = judgeJson.substring(3);
+                    }
+                    if (judgeJson.endsWith("```")) {
+                        judgeJson = judgeJson.substring(0, judgeJson.length() - 3);
+                    }
+                    judgeJson = judgeJson.trim();
+                    
+                    String status = "NON VÉRIFIÉ";
                     boolean isSupported = false;
-                    if (maxScore >= verifiedThreshold) {
-                        status = "VÉRIFIÉ";
-                        isSupported = true;
-                    } else if (maxScore >= uncertainThreshold) {
-                        status = "INCERTAIN";
-                    } else {
-                        status = "NON VÉRIFIÉ";
+                    String reasoning = "";
+                    
+                    try {
+                        JsonNode judgeNode = objectMapper.readTree(judgeJson);
+                        if (judgeNode.has("status")) {
+                            status = judgeNode.get("status").asText().toUpperCase();
+                            if (!status.equals("VÉRIFIÉ") && !status.equals("INCERTAIN")) {
+                                status = "NON VÉRIFIÉ";
+                            }
+                            isSupported = "VÉRIFIÉ".equals(status);
+                        }
+                        if (judgeNode.has("reasoning")) {
+                            reasoning = judgeNode.get("reasoning").asText();
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Failed to parse judge JSON: " + judgeJson);
                     }
                     
-                    sumScores += maxScore;
+                    // Calculate confidence score contribution based on LLM judgement (0 to 1)
+                    if ("VÉRIFIÉ".equals(status)) {
+                        sumScores += 1.0;
+                    } else if ("INCERTAIN".equals(status)) {
+                        sumScores += 0.5;
+                    }
                     
                     String chunksJson = objectMapper.writeValueAsString(chunksData);
                     
@@ -166,6 +203,7 @@ public class HallucinationGuardService {
                     newClaimNode.put("isSupported", isSupported);
                     newClaimNode.put("status", status);
                     newClaimNode.put("score", maxScore);
+                    newClaimNode.put("reasoning", reasoning);
                     newClaimNode.set("chunks", objectMapper.valueToTree(chunksData));
                     
                     claimsArray.add(newClaimNode);

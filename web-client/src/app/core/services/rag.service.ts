@@ -78,4 +78,8 @@ export class RagService {
     formData.append('file', file);
     return this.http.post<any>(`http://localhost:8082/api/audit/upload`, formData);
   }
+
+  startSecurityAudit(contractId: number): Observable<any> {
+    return this.http.post(`http://localhost:8082/api/audit/${contractId}/analyze`, {}, { responseType: 'text' });
+  }
 }

@@ -1,122 +1,196 @@
-<div class="h-full flex flex-col p-6 space-y-6 max-w-5xl mx-auto w-full">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
-        Smart Contract Auditor
-      </h1>
-      <p class="text-gray-400 mt-2 text-sm">
-        Uploadez un fichier Solidity (.sol) pour extraire automatiquement son AST et sa structure.
-      </p>
-    </div>
+<div class="h-full flex flex-col p-6 max-w-5xl mx-auto w-full">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+      Smart Contract Auditor
+    </h1>
+    <p class="text-gray-400 mt-2 text-sm">
+      Analyse de sécurité propulsée par l'IA et validée par un moteur de règles.
+    </p>
   </div>
 
-  <!-- Drag and Drop Zone -->
-  <mat-card class="bg-white/5 border border-white/10 shadow-xl rounded-2xl p-4">
-    <mat-card-content>
-      <ngx-file-drop 
-        dropZoneLabel="Glissez-déposez un fichier .sol ici" 
-        (onFileDrop)="dropped($event)" 
-        (onFileOver)="fileOver($event)" 
-        (onFileLeave)="fileLeave($event)"
-        contentClassName="h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 rounded-xl border-2 border-dashed border-indigo-500/50 transition-colors text-indigo-200">
-        <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
-          <div class="flex flex-col items-center gap-2" (click)="openFileSelector()">
-            <mat-icon class="scale-150 text-indigo-400 mb-2">cloud_upload</mat-icon>
-            <span class="font-medium text-lg">Glissez-déposez un fichier .sol ici</span>
-            <span class="text-sm text-gray-400">ou cliquez pour parcourir</span>
-          </div>
-        </ng-template>
-      </ngx-file-drop>
-
-      <div *ngIf="uploadError" class="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 flex items-center gap-2">
-        <mat-icon>error_outline</mat-icon>
-        {{ uploadError }}
-      </div>
-
-      <div *ngIf="isUploading" class="mt-6 flex flex-col items-center justify-center space-y-3">
-        <mat-spinner diameter="40"></mat-spinner>
-        <span class="text-gray-300 animate-pulse">Analyse du contrat en cours...</span>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Parsed Structure Display -->
-  <div *ngIf="parsedStructure && !isUploading" class="animate-fade-in pb-10">
-    <h2 class="text-2xl font-semibold mb-4 text-white flex items-center gap-2">
-      <mat-icon class="text-green-400">check_circle</mat-icon>
-      Analyse de <span class="text-indigo-400">{{ parsedStructure.contractName || 'Contrat Inconnu' }}</span>
-    </h2>
-
-    <mat-accordion multi="true" class="space-y-4">
+  <mat-stepper orientation="vertical" [linear]="true" class="bg-transparent" #stepper>
+    
+    <!-- Étape 1 : Parsing -->
+    <mat-step [completed]="parsedStructure != null">
+      <ng-template matStepLabel>1. Importation et Parsing</ng-template>
       
-      <!-- Functions -->
-      <mat-expansion-panel [expanded]="true" class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
-        <mat-expansion-panel-header>
-          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
-            <mat-icon class="text-blue-400">code</mat-icon> 
-            Fonctions ({{ parsedStructure.functions?.length || 0 }})
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        
-        <div class="flex flex-col gap-3 pt-2">
-          <div *ngIf="!parsedStructure.functions?.length" class="text-gray-400 italic">Aucune fonction détectée.</div>
-          <div *ngFor="let func of parsedStructure.functions" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
-            <pre><code [highlight]="func" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
-          </div>
-        </div>
-      </mat-expansion-panel>
+      <!-- Drag and Drop Zone -->
+      <mat-card class="bg-white/5 border border-white/10 shadow-xl rounded-2xl p-4 mt-4">
+        <mat-card-content>
+          <ngx-file-drop 
+            dropZoneLabel="Glissez-déposez un fichier .sol ici" 
+            (onFileDrop)="dropped($event)" 
+            (onFileOver)="fileOver($event)" 
+            (onFileLeave)="fileLeave($event)"
+            contentClassName="h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 rounded-xl border-2 border-dashed border-indigo-500/50 transition-colors text-indigo-200">
+            <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
+              <div class="flex flex-col items-center gap-2" (click)="openFileSelector()">
+                <mat-icon class="scale-150 text-indigo-400 mb-2">cloud_upload</mat-icon>
+                <span class="font-medium text-lg">Glissez-déposez un fichier .sol ici</span>
+                <span class="text-sm text-gray-400">ou cliquez pour parcourir</span>
+              </div>
+            </ng-template>
+          </ngx-file-drop>
 
-      <!-- Modifiers -->
-      <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
-        <mat-expansion-panel-header>
-          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
-            <mat-icon class="text-purple-400">tune</mat-icon> 
-            Modifiers ({{ parsedStructure.modifiers?.length || 0 }})
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        
-        <div class="flex flex-col gap-3 pt-2">
-          <div *ngIf="!parsedStructure.modifiers?.length" class="text-gray-400 italic">Aucun modifier détecté.</div>
-          <div *ngFor="let mod of parsedStructure.modifiers" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
-            <pre><code [highlight]="mod" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
+          <div *ngIf="uploadError" class="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 flex items-center gap-2">
+            <mat-icon>error_outline</mat-icon>
+            {{ uploadError }}
           </div>
-        </div>
-      </mat-expansion-panel>
 
-      <!-- Events -->
-      <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
-        <mat-expansion-panel-header>
-          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
-            <mat-icon class="text-yellow-400">notifications_active</mat-icon> 
-            Events ({{ parsedStructure.events?.length || 0 }})
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        
-        <div class="flex flex-col gap-3 pt-2">
-          <div *ngIf="!parsedStructure.events?.length" class="text-gray-400 italic">Aucun event détecté.</div>
-          <div *ngFor="let evt of parsedStructure.events" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
-            <pre><code [highlight]="evt" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
+          <div *ngIf="isUploading" class="mt-6 flex flex-col items-center justify-center space-y-3">
+            <mat-spinner diameter="40"></mat-spinner>
+            <span class="text-gray-300 animate-pulse">Parsing du contrat en cours...</span>
           </div>
-        </div>
-      </mat-expansion-panel>
+        </mat-card-content>
+      </mat-card>
 
-      <!-- State Variables -->
-      <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-        <mat-expansion-panel-header>
-          <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
-            <mat-icon class="text-emerald-400">data_object</mat-icon> 
-            Variables d'état ({{ parsedStructure.stateVariables?.length || 0 }})
-          </mat-panel-title>
-        </mat-expansion-panel-header>
+      <!-- Structure -->
+      <div *ngIf="parsedStructure && !isUploading" class="mt-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-white">Structure détectée</h3>
+          <button mat-flat-button color="primary" matStepperNext (click)="startAudit()">
+            Lancer l'audit de sécurité <mat-icon>security</mat-icon>
+          </button>
+        </div>
         
-        <div class="flex flex-col gap-3 pt-2">
-          <div *ngIf="!parsedStructure.stateVariables?.length" class="text-gray-400 italic">Aucune variable d'état détectée.</div>
-          <div *ngFor="let stateVar of parsedStructure.stateVariables" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
-            <pre><code [highlight]="stateVar" language="solidity" class="text-sm bg-transparent !p-0"></code></pre>
-          </div>
-        </div>
-      </mat-expansion-panel>
+        <mat-accordion multi="true" class="space-y-4">
+          <!-- Functions -->
+          <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+                <mat-icon class="text-blue-400">code</mat-icon> Fonctions ({{ parsedStructure.functions?.length || 0 }})
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="flex flex-col gap-3 pt-2">
+              <div *ngFor="let func of parsedStructure.functions" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+                <pre><code [highlight]="func" language="typescript" class="text-sm bg-transparent !p-0"></code></pre>
+              </div>
+            </div>
+          </mat-expansion-panel>
 
-    </mat-accordion>
-  </div>
+          <!-- Modifiers -->
+          <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+                <mat-icon class="text-purple-400">tune</mat-icon> Modifiers ({{ parsedStructure.modifiers?.length || 0 }})
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="flex flex-col gap-3 pt-2">
+              <div *ngIf="!parsedStructure.modifiers?.length" class="text-gray-400 italic">Aucun modifier détecté.</div>
+              <div *ngFor="let mod of parsedStructure.modifiers" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+                <pre><code [highlight]="mod" language="typescript" class="text-sm bg-transparent !p-0"></code></pre>
+              </div>
+            </div>
+          </mat-expansion-panel>
+
+          <!-- Events -->
+          <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-4">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+                <mat-icon class="text-yellow-400">notifications_active</mat-icon> Events ({{ parsedStructure.events?.length || 0 }})
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="flex flex-col gap-3 pt-2">
+              <div *ngIf="!parsedStructure.events?.length" class="text-gray-400 italic">Aucun event détecté.</div>
+              <div *ngFor="let evt of parsedStructure.events" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+                <pre><code [highlight]="evt" language="typescript" class="text-sm bg-transparent !p-0"></code></pre>
+              </div>
+            </div>
+          </mat-expansion-panel>
+
+          <!-- State Variables -->
+          <mat-expansion-panel class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="text-gray-100 font-medium flex items-center gap-2">
+                <mat-icon class="text-emerald-400">data_object</mat-icon> Variables d'état ({{ parsedStructure.stateVariables?.length || 0 }})
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="flex flex-col gap-3 pt-2">
+              <div *ngIf="!parsedStructure.stateVariables?.length" class="text-gray-400 italic">Aucune variable d'état détectée.</div>
+              <div *ngFor="let stateVar of parsedStructure.stateVariables" class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5">
+                <pre><code [highlight]="stateVar" language="typescript" class="text-sm bg-transparent !p-0"></code></pre>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </mat-step>
+
+    <!-- Étape 2 : Analyse IA -->
+    <mat-step [completed]="auditComplete">
+      <ng-template matStepLabel>2. Analyse IA & Validation</ng-template>
+      <div class="py-8 flex flex-col items-center justify-center bg-white/5 border border-white/10 rounded-xl mt-4">
+        <mat-spinner diameter="60" *ngIf="isAnalyzing" class="mb-4"></mat-spinner>
+        <mat-icon *ngIf="auditComplete" class="text-green-400 scale-[3] mb-8">verified</mat-icon>
+        <h3 class="text-xl font-semibold text-white mb-2">{{ auditComplete ? 'Analyse Terminée' : 'Audit en cours...' }}</h3>
+        <p class="text-indigo-300 font-mono text-sm px-4 py-2 bg-black/40 rounded-lg">{{ analysisStatus }}</p>
+        
+        <button mat-flat-button color="primary" class="mt-6" matStepperNext *ngIf="auditComplete">
+          Voir le Rapport Final
+        </button>
+      </div>
+    </mat-step>
+
+    <!-- Étape 3 : Rapport -->
+    <mat-step>
+      <ng-template matStepLabel>3. Rapport de Sécurité</ng-template>
+      
+      <div class="mt-4" *ngIf="auditComplete">
+        <div class="flex items-center gap-2 mb-6">
+          <mat-icon class="text-red-400">bug_report</mat-icon>
+          <h2 class="text-2xl font-bold">Vulnérabilités Détectées ({{ findings.length }})</h2>
+        </div>
+
+        <div *ngIf="findings.length === 0" class="p-8 text-center bg-green-500/10 border border-green-500/30 rounded-2xl">
+          <mat-icon class="text-green-400 scale-[2] mb-4">shield</mat-icon>
+          <h3 class="text-xl text-green-300">Aucune vulnérabilité trouvée !</h3>
+          <p class="text-gray-400 mt-2">Le contrat semble sécurisé selon nos règles actuelles.</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+          <mat-card *ngFor="let finding of findings" class="bg-white/5 border border-white/10 shadow-lg rounded-xl overflow-hidden">
+            <div class="flex items-start">
+              <!-- Sidebar color coded by severity -->
+              <div class="w-2 h-full absolute left-0 top-0 bottom-0"
+                   [ngClass]="{
+                     'bg-red-500': finding.severity === 'CRITICAL',
+                     'bg-orange-500': finding.severity === 'HIGH',
+                     'bg-yellow-500': finding.severity === 'MEDIUM',
+                     'bg-blue-500': finding.severity === 'LOW'
+                   }"></div>
+              
+              <mat-card-content class="w-full pl-6 pt-4 pb-4 pr-4">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-lg font-bold text-white">{{ finding.title }}</h3>
+                  <mat-chip-set>
+                    <mat-chip class="font-bold text-xs"
+                              [ngClass]="{
+                                'bg-red-500/20 text-red-300 border-red-500/50': finding.severity === 'CRITICAL',
+                                'bg-orange-500/20 text-orange-300 border-orange-500/50': finding.severity === 'HIGH',
+                                'bg-yellow-500/20 text-yellow-300 border-yellow-500/50': finding.severity === 'MEDIUM',
+                                'bg-blue-500/20 text-blue-300 border-blue-500/50': finding.severity === 'LOW'
+                              }" style="border-width: 1px;">
+                      {{ finding.severity }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+                
+                <p class="text-gray-300 text-sm mb-4">{{ finding.description }}</p>
+                
+                <div class="bg-[#0d1117] rounded-md overflow-x-auto p-3 border border-white/5 mb-3">
+                  <pre><code [highlight]="finding.codeSnippet" language="typescript" class="text-xs bg-transparent !p-0"></code></pre>
+                </div>
+                
+                <div class="flex items-center gap-2 text-xs font-medium" [ngClass]="finding.validatedByRules ? 'text-green-400' : 'text-red-400'">
+                  <mat-icon class="scale-75">{{ finding.validatedByRules ? 'rule' : 'warning' }}</mat-icon>
+                  {{ finding.validatedByRules ? 'Validé par le Rule Engine (' + finding.severity + ' confirmé)' : 'Invalide: Faux positif de l\'IA détecté' }}
+                </div>
+              </mat-card-content>
+            </div>
+          </mat-card>
+        </div>
+      </div>
+    </mat-step>
+
+  </mat-stepper>
 </div>

@@ -9,6 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContractStructureDTO {
+    private Long contractId;
     private String contractName;
     private List<String> functions;
     private List<String> modifiers;

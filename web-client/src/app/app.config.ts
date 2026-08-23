@@ -50,8 +50,7 @@ export const appConfig: ApplicationConfig = {
       useValue: {
         coreLibraryLoader: () => import('highlight.js/lib/core'),
         languages: {
-          // @ts-ignore
-          solidity: () => import('highlightjs-solidity')
+          typescript: () => import('highlight.js/lib/languages/typescript')
         }
       }
     }

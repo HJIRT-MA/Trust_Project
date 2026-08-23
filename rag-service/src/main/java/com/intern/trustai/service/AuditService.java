@@ -27,10 +27,12 @@ public class AuditService {
         SmartContract contract = new SmartContract();
         contract.setName(file.getOriginalFilename() != null ? file.getOriginalFilename() : "Unknown.sol");
         contract.setContent(content);
-        smartContractRepository.save(contract);
+        contract = smartContractRepository.save(contract);
 
         // Parse with Regex
-        return parseSolidityCode(content);
+        ContractStructureDTO dto = parseSolidityCode(content);
+        dto.setContractId(contract.getId());
+        return dto;
     }
 
     private ContractStructureDTO parseSolidityCode(String code) {

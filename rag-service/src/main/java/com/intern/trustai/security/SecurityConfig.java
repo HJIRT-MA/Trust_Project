@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/api/audit/stream/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2->oauth2
                         .jwt(jwt->jwt.jwtAuthenticationConverter((jwtAuthenticationConverter()))))

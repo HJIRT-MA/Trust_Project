@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import '@angular/material/prebuilt-themes/pink-bluegrey.css';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 html, body { height: 100%; }
@@ -136,5 +136,39 @@ body {
 .ngx-file-drop__content {
   color: inherit !important;
 }
+/* --- Aggressive Angular Material Expansion Panel Dark Override --- */
 
-@import 'highlight.js/styles/github-dark.css';
+/* 1. Target the CSS variables used by modern Angular Material */
+.mat-expansion-panel {
+  --mat-expansion-container-background-color: rgba(255, 255, 255, 0.05) !important;
+  --mat-expansion-container-text-color: rgba(255, 255, 255, 0.9) !important;
+  --mat-expansion-header-text-color: rgba(255, 255, 255, 0.9) !important;
+  --mat-expansion-header-indicator-color: rgba(255, 255, 255, 0.7) !important;
+
+  /* Fallback for older properties or specific view encapsulations */
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 12px !important; /* To match your form fields */
+}
+
+/* 2. Force the header to be transparent so it inherits the panel background */
+.mat-expansion-panel-header,
+.mat-expansion-panel-header.mat-expanded {
+  background-color: transparent !important;
+}
+
+.mat-expansion-panel-header:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 3. Force text colors on titles and descriptions */
+.mat-expansion-panel-header-title,
+.mat-expansion-panel-header-description,
+.mat-expansion-panel-content {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 4. Fix the toggle arrow (chevron) color */
+.mat-expansion-indicator::after {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
