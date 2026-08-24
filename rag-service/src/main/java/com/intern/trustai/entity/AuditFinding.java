@@ -39,6 +39,18 @@ public class AuditFinding {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "swc_id")
+    private String swcId;
+
+    @Column(name = "swc_title")
+    private String swcTitle;
+
+    @Column(columnDefinition = "TEXT", name = "enriched_explanation")
+    private String enrichedExplanation;
+
+    @Column(columnDefinition = "TEXT", name = "vulnerable_example")
+    private String vulnerableExample;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

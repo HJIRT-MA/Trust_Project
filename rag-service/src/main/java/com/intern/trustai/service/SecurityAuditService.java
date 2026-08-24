@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,16 +24,19 @@ public class SecurityAuditService {
     private final FindingValidationRuleEngine ruleEngine;
     private final AuditFindingRepository findingRepository;
     private final SmartContractRepository smartContractRepository;
+    private final SwcRagService swcRagService;
     private final ObjectMapper objectMapper;
 
     public SecurityAuditService(ChatLanguageModel chatLanguageModel,
                                 FindingValidationRuleEngine ruleEngine,
                                 AuditFindingRepository findingRepository,
-                                SmartContractRepository smartContractRepository) {
+                                SmartContractRepository smartContractRepository,
+                                SwcRagService swcRagService) {
         this.chatLanguageModel = chatLanguageModel;
         this.ruleEngine = ruleEngine;
         this.findingRepository = findingRepository;
         this.smartContractRepository = smartContractRepository;
+        this.swcRagService = swcRagService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -67,12 +71,10 @@ public class SecurityAuditService {
 
             String response = chatLanguageModel.generate(prompt);
 
-            // Extract JSON array using regex in case Llama3 adds conversational text
             Matcher jsonMatcher = Pattern.compile("\\[\\s*\\{.*?\\}\\s*\\]", Pattern.DOTALL).matcher(response);
             if (jsonMatcher.find()) {
                 response = jsonMatcher.group(0);
             } else {
-                // If it couldn't find a JSON array, default to empty array
                 response = "[]";
             }
 
@@ -97,6 +99,16 @@ public class SecurityAuditService {
                         finding.setCodeSnippet(codeSnippet);
                         finding.setValidatedByRules(isValid);
 
+                        // Enrichment RAG SWC
+                        sendSseEvent(emitter, "Enriching with SWC Registry...");
+                        Map<String, String> swcData = swcRagService.enrichFinding(title, description, codeSnippet);
+                        if (!swcData.isEmpty()) {
+                            finding.setSwcId(swcData.get("swcId"));
+                            finding.setSwcTitle(swcData.get("swcTitle"));
+                            finding.setEnrichedExplanation(swcData.get("enrichedExplanation"));
+                            finding.setVulnerableExample(swcData.get("vulnerableExample"));
+                        }
+
                         findings.add(findingRepository.save(finding));
                     }
                 }
@@ -106,7 +118,33 @@ public class SecurityAuditService {
             }
         }
         
+        // Calculate Global Risk Score
+        int totalScore = 0;
+        for (AuditFinding f : findings) {
+            switch (f.getSeverity().toUpperCase()) {
+                case "CRITICAL": totalScore += 100; break;
+                case "HIGH": totalScore += 80; break;
+                case "MEDIUM": totalScore += 50; break;
+                case "LOW": totalScore += 20; break;
+            }
+        }
+        int finalScore = Math.min(100, totalScore);
+        String riskLevel = "SAFE";
+        if (finalScore >= 90) riskLevel = "CRITICAL";
+        else if (finalScore >= 50) riskLevel = "RISKY";
+        else if (finalScore > 0) riskLevel = "MODERATE";
+
+        contract.setGlobalRiskScore(finalScore);
+        contract.setRiskLevel(riskLevel);
+        smartContractRepository.save(contract);
+
         sendSseEvent(emitter, "Analysis complete. " + findings.size() + " findings saved.");
+        
+        // We can pass the score and findings via the response. The frontend expects an array of findings.
+        // We will include the riskScore in the final message. Actually the frontend JSON.parse the event.data.
+        // Let's create a custom response wrapper or just send it as a special SSE event before complete.
+        sendSseEvent(emitter, "{\"riskScore\": " + finalScore + ", \"riskLevel\": \"" + riskLevel + "\"}");
+
         return findings;
     }
 

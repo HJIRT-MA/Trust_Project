@@ -10,12 +10,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { CodemirrorModule } from '@ctrl/ngx-codemirror';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-audit',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     NgxFileDropModule,
     HighlightModule,
     MatCardModule,
@@ -24,7 +29,9 @@ import { MatChipsModule } from '@angular/material/chips';
     MatProgressSpinnerModule,
     MatStepperModule,
     MatButtonModule,
-    MatChipsModule
+    MatChipsModule,
+    CodemirrorModule,
+    BaseChartDirective
   ],
   templateUrl: './audit.component.html',
   styleUrls: ['./audit.component.scss']
@@ -42,6 +49,39 @@ export class AuditComponent {
   public analysisStatus: string = '';
   public findings: any[] = [];
   public auditComplete = false;
+
+  public globalRiskScore: number = 0;
+  public riskLevel: string = 'SAFE';
+
+  // CodeMirror Options
+  public codeMirrorOptions = {
+    lineNumbers: true,
+    theme: 'material',
+    mode: 'text/x-java', // Fallback for solidity
+    readOnly: 'nocursor'
+  };
+
+  // ChartJS Gauge Options
+  public gaugeChartType: ChartType = 'doughnut';
+  public gaugeChartData: ChartData<'doughnut'> = {
+    labels: ['Risk Score', 'Remaining'],
+    datasets: [{
+      data: [0, 100],
+      backgroundColor: ['#10B981', '#1f2937'],
+      borderWidth: 0
+    }]
+  };
+  public gaugeChartOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    rotation: -90,
+    circumference: 180,
+    cutout: '80%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false }
+    }
+  };
 
   public dropped(files: NgxFileDropEntry[]) {
     this.files = files;
@@ -80,6 +120,8 @@ export class AuditComponent {
     this.isAnalyzing = true;
     this.auditComplete = false;
     this.findings = [];
+    this.globalRiskScore = 0;
+    this.updateGaugeChart(0, 'SAFE');
     this.analysisStatus = "Connexion au flux SSE...";
     this.cdr.detectChanges();
     
@@ -100,6 +142,16 @@ export class AuditComponent {
     });
     
     eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.riskScore !== undefined) {
+           this.globalRiskScore = data.riskScore;
+           this.riskLevel = data.riskLevel;
+           this.updateGaugeChart(this.globalRiskScore, this.riskLevel);
+           return;
+        }
+      } catch(e) {}
+      
       this.analysisStatus = event.data;
       this.cdr.detectChanges();
     };
@@ -120,6 +172,23 @@ export class AuditComponent {
       }
       this.cdr.detectChanges();
     };
+  }
+
+  private updateGaugeChart(score: number, level: string) {
+    let color = '#10B981'; // SAFE (Green)
+    if (level === 'MODERATE') color = '#FBBF24'; // Yellow
+    if (level === 'RISKY') color = '#F97316'; // Orange
+    if (level === 'CRITICAL') color = '#EF4444'; // Red
+
+    this.gaugeChartData = {
+      labels: ['Risk Score', 'Remaining'],
+      datasets: [{
+        data: [score, 100 - score],
+        backgroundColor: [color, '#1f2937'],
+        borderWidth: 0
+      }]
+    };
+    this.cdr.detectChanges();
   }
 
   public fileOver(event: any){

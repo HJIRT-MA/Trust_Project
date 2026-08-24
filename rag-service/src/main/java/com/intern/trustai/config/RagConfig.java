@@ -57,7 +57,7 @@ public class RagConfig {
     public ChatLanguageModel chatLanguageModel() {
         return OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3:latest")
+                .modelName("llama3.2:3b")
                 .timeout(Duration.ofMinutes(5))
                 .build();
    }
@@ -66,7 +66,7 @@ public class RagConfig {
     public StreamingChatLanguageModel streamingChatLanguageModel() {
         return OllamaStreamingChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3:latest")
+                .modelName("llama3.2:3b")
                 .timeout(Duration.ofMinutes(5))
                 .build();
     }

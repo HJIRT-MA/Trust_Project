@@ -25,6 +25,12 @@ public class SmartContract {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "global_risk_score")
+    private Integer globalRiskScore;
+
+    @Column(name = "risk_level")
+    private String riskLevel;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

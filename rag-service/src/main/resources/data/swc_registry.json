@@ -1,0 +1,32 @@
+[
+  {
+    "swcId": "SWC-107",
+    "title": "Reentrancy",
+    "description": "A smart contract vulnerability where an external malicious contract can call back into the vulnerable contract before the first invocation finishes, allowing it to bypass state checks (e.g. draining funds).",
+    "vulnerableExample": "function withdraw() public {\n    uint bal = balances[msg.sender];\n    require(bal > 0);\n    (bool sent, ) = msg.sender.call{value: bal}(\"\");\n    require(sent, \"Failed to send Ether\");\n    balances[msg.sender] = 0;\n}"
+  },
+  {
+    "swcId": "SWC-101",
+    "title": "Integer Overflow and Underflow",
+    "description": "An issue occurring when an arithmetic operation reaches the maximum or minimum size of the type. Prior to Solidity 0.8.0, this could cause values to wrap around, leading to unexpected behavior.",
+    "vulnerableExample": "mapping(address => uint256) public balances;\n\nfunction transfer(address _to, uint256 _amount) public {\n    require(balances[msg.sender] - _amount >= 0);\n    balances[msg.sender] -= _amount;\n    balances[_to] += _amount;\n}"
+  },
+  {
+    "swcId": "SWC-112",
+    "title": "Delegatecall to Untrusted Callee",
+    "description": "Calling a contract with delegatecall allows the target contract to execute its code within the context of the calling contract, which can modify state variables or self-destruct if the target is untrusted.",
+    "vulnerableExample": "function proxyCall(address _contract, bytes memory _data) public {\n    (bool success, ) = _contract.delegatecall(_data);\n    require(success);\n}"
+  },
+  {
+    "swcId": "SWC-106",
+    "title": "Unprotected SELFDESTRUCT Instruction",
+    "description": "If a contract allows anyone to call a function containing selfdestruct, a malicious user can destroy the contract and drain its remaining ether.",
+    "vulnerableExample": "function kill() public {\n    selfdestruct(payable(msg.sender));\n}"
+  },
+  {
+    "swcId": "SWC-105",
+    "title": "Unprotected Ether Withdrawal",
+    "description": "When a function allows withdrawing ether without proper access control (like an onlyOwner modifier), anyone can drain the contract.",
+    "vulnerableExample": "function withdrawAll() public {\n    payable(msg.sender).transfer(address(this).balance);\n}"
+  }
+]
