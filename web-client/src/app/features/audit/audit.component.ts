@@ -14,6 +14,7 @@ import { CodemirrorModule } from '@ctrl/ngx-codemirror';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { FormsModule } from '@angular/forms';
+import { PdfViewerModule } from 'ng2-pdf-viewer';
 
 @Component({
   selector: 'app-audit',
@@ -31,7 +32,8 @@ import { FormsModule } from '@angular/forms';
     MatButtonModule,
     MatChipsModule,
     CodemirrorModule,
-    BaseChartDirective
+    BaseChartDirective,
+    PdfViewerModule
   ],
   templateUrl: './audit.component.html',
   styleUrls: ['./audit.component.scss']
@@ -98,12 +100,12 @@ export class AuditComponent {
 
           this.isUploading = true;
           this.ragService.uploadSmartContract(file).subscribe({
-            next: (response) => {
+            next: (response: any) => {
               this.parsedStructure = response;
               this.isUploading = false;
               this.cdr.detectChanges();
             },
-            error: (err) => {
+            error: (err: any) => {
               this.uploadError = 'Erreur lors du parsing du contrat: ' + (err.error?.message || err.message);
               this.isUploading = false;
               this.cdr.detectChanges();
@@ -128,7 +130,7 @@ export class AuditComponent {
     const eventSource = new EventSource(`http://localhost:8082/api/audit/stream/${this.parsedStructure.contractId}`);
     
     this.ragService.startSecurityAudit(this.parsedStructure.contractId).subscribe({
-      error: (err) => {
+      error: (err: any) => {
         let serverMsg = "Erreur Inconnue";
         if (err.error) {
            serverMsg = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
@@ -191,11 +193,40 @@ export class AuditComponent {
     this.cdr.detectChanges();
   }
 
+  public pdfSrc: string | Uint8Array | undefined = undefined;
+  public showPdfPreview: boolean = false;
+
   public fileOver(event: any){
     console.log(event);
   }
 
   public fileLeave(event: any){
     console.log(event);
+  }
+
+  public downloadPdf() {
+    if (!this.parsedStructure?.contractId) return;
+    this.ragService.downloadPdfReport(this.parsedStructure.contractId).subscribe({
+      next: (blob: Blob) => {
+        // Prepare preview
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.pdfSrc = e.target.result;
+          this.showPdfPreview = true;
+        };
+        reader.readAsArrayBuffer(blob);
+
+        // trigger download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Audit_Report_${this.parsedStructure.contractName || 'contract'}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err: any) => {
+        console.error('Error downloading PDF', err);
+      }
+    });
   }
 }

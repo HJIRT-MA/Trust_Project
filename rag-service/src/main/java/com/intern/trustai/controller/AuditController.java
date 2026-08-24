@@ -7,6 +7,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.intern.trustai.entity.AuditFinding;
+import com.intern.trustai.entity.SmartContract;
+import com.intern.trustai.repository.AuditFindingRepository;
+import com.intern.trustai.repository.SmartContractRepository;
+import com.intern.trustai.service.SecurityPdfReportService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+
 @RestController
 @RequestMapping("/api/audit")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -14,11 +23,24 @@ public class AuditController {
 
     private final AuditService auditService;
     private final com.intern.trustai.service.SecurityAuditService securityAuditService;
+    private final SmartContractRepository smartContractRepository;
+    private final AuditFindingRepository findingRepository;
+    private final SecurityPdfReportService pdfReportService;
+    private final com.intern.trustai.repository.AuditReportSignatureRepository signatureRepository;
     private final java.util.Map<Long, org.springframework.web.servlet.mvc.method.annotation.SseEmitter> emitters = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public AuditController(AuditService auditService, com.intern.trustai.service.SecurityAuditService securityAuditService) {
+    public AuditController(AuditService auditService, 
+                           com.intern.trustai.service.SecurityAuditService securityAuditService,
+                           SmartContractRepository smartContractRepository,
+                           AuditFindingRepository findingRepository,
+                           SecurityPdfReportService pdfReportService,
+                           com.intern.trustai.repository.AuditReportSignatureRepository signatureRepository) {
         this.auditService = auditService;
         this.securityAuditService = securityAuditService;
+        this.smartContractRepository = smartContractRepository;
+        this.findingRepository = findingRepository;
+        this.pdfReportService = pdfReportService;
+        this.signatureRepository = signatureRepository;
     }
 
     @PostMapping("/upload")
@@ -50,8 +72,10 @@ public class AuditController {
 
     @PostMapping("/{contractId}/analyze")
     @PreAuthorize("hasAnyRole('admin', 'analyst')")
-    public ResponseEntity<String> startAnalysis(@PathVariable("contractId") Long contractId) {
+    public ResponseEntity<String> startAnalysis(@PathVariable("contractId") Long contractId, Authentication authentication) {
         String currentTenant = com.intern.trustai.security.TenantContext.getCurrentTenant();
+        String auditor = authentication != null ? authentication.getName() : "Unknown";
+        
         try {
             new Thread(() -> {
                 com.intern.trustai.security.TenantContext.setCurrentTenant(currentTenant);
@@ -64,7 +88,7 @@ public class AuditController {
                     }
                     if (emitter != null) emitter.send("Starting security audit...");
                     
-                    java.util.List<com.intern.trustai.entity.AuditFinding> findings = securityAuditService.runSecurityAudit(contractId, emitter);
+                    java.util.List<com.intern.trustai.entity.AuditFinding> findings = securityAuditService.runSecurityAudit(contractId, emitter, auditor);
                     
                     if (emitter != null) {
                         emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("complete").data(findings));
@@ -83,6 +107,43 @@ public class AuditController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/history")
+    @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
+    public ResponseEntity<java.util.List<SmartContract>> getHistory() {
+        return ResponseEntity.ok(smartContractRepository.findAll());
+    }
+
+    @GetMapping("/{contractId}/findings")
+    @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
+    public ResponseEntity<java.util.List<AuditFinding>> getFindings(@PathVariable("contractId") Long contractId) {
+        return ResponseEntity.ok(findingRepository.findBySmartContractId(contractId));
+    }
+
+    @GetMapping("/{contractId}/report/pdf")
+    @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
+    public ResponseEntity<byte[]> downloadPdfReport(@PathVariable("contractId") Long contractId) {
+        try {
+            byte[] pdf = pdfReportService.generateAndSignReport(contractId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("filename", "Security_Audit_Report_" + contractId + ".pdf");
+            return ResponseEntity.ok().headers(headers).body(pdf);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/{contractId}")
+    @PreAuthorize("hasAnyRole('admin', 'analyst')")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<Void> deleteAudit(@PathVariable("contractId") Long contractId) {
+        findingRepository.deleteBySmartContractId(contractId);
+        signatureRepository.deleteBySmartContractId(contractId);
+        smartContractRepository.deleteById(contractId);
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(Throwable.class)

@@ -17,12 +17,14 @@ export class AppComponent implements OnInit {
 
   isLoggedIn = false;
   isAdmin = false;
+  isViewer = false;
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       this.isLoggedIn = this.keycloak.isLoggedIn();
       if (this.isLoggedIn) {
         this.isAdmin = this.keycloak.getUserRoles().includes('admin');
+        this.isViewer = this.keycloak.getUserRoles().includes('viewer');
       }
     }
   }

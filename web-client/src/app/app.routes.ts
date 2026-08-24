@@ -21,6 +21,24 @@ export const routes: Routes = [
     data: { roles: ['admin'] } 
   },
   {
+    path: 'audit-history',
+    loadComponent: () => import('./features/audit-history/audit-history.component').then(m => m.AuditHistoryComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin'] } 
+  },
+  {
+    path: 'audit-diff',
+    loadComponent: () => import('./features/audit-diff/audit-diff.component').then(m => m.AuditDiffComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin'] } 
+  },
+  {
+    path: 'timeline',
+    loadComponent: () => import('./features/timeline/timeline.component').then(m => m.TimelineComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin', 'viewer'] } 
+  },
+  {
     path: '',
     redirectTo: 'chat',
     pathMatch: 'full' // Redirige vers /chat par défaut

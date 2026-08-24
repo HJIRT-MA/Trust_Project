@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface AuditFindingRepository extends JpaRepository<AuditFinding, Long> {
     List<AuditFinding> findBySmartContractId(Long smartContractId);
+    void deleteBySmartContractId(Long smartContractId);
 }

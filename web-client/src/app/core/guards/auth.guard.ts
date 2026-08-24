@@ -31,5 +31,5 @@ export const authGuard: CanActivateFn = async (
     return true;
   }
 
-  return requiredRoles.every((role) => keycloak.getUserRoles().includes(role));
+  return requiredRoles.some((role: string) => keycloak.getUserRoles().includes(role));
 };

@@ -8,6 +8,7 @@ import com.intern.trustai.repository.AuditFindingRepository;
 import com.intern.trustai.repository.SmartContractRepository;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import org.springframework.stereotype.Service;
+import com.intern.trustai.service.FindingValidationRuleEngine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,22 +27,25 @@ public class SecurityAuditService {
     private final SmartContractRepository smartContractRepository;
     private final SwcRagService swcRagService;
     private final ObjectMapper objectMapper;
+    private final KafkaProducerService kafkaProducerService;
 
     public SecurityAuditService(ChatLanguageModel chatLanguageModel,
                                 FindingValidationRuleEngine ruleEngine,
                                 AuditFindingRepository findingRepository,
                                 SmartContractRepository smartContractRepository,
-                                SwcRagService swcRagService) {
+                                SwcRagService swcRagService,
+                                KafkaProducerService kafkaProducerService) {
         this.chatLanguageModel = chatLanguageModel;
         this.ruleEngine = ruleEngine;
         this.findingRepository = findingRepository;
         this.smartContractRepository = smartContractRepository;
         this.swcRagService = swcRagService;
+        this.kafkaProducerService = kafkaProducerService;
         this.objectMapper = new ObjectMapper();
     }
 
     @Transactional
-    public List<AuditFinding> runSecurityAudit(Long contractId, org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter) {
+    public List<AuditFinding> runSecurityAudit(Long contractId, org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter, String auditor) {
         SmartContract contract = smartContractRepository.findById(contractId)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
 
@@ -67,6 +71,7 @@ public class SecurityAuditService {
                     "    \"codeSnippet\": \"The exact line(s) of code causing the issue\"\n" +
                     "  }\n" +
                     "]\n" +
+                    "IMPORTANT: You MUST ensure the JSON is strictly valid. Escape any double quotes inside the code snippet using \\\" .\n" +
                     "If no vulnerabilities are found, output an empty array: []";
 
             String response = chatLanguageModel.generate(prompt);
@@ -136,7 +141,14 @@ public class SecurityAuditService {
 
         contract.setGlobalRiskScore(finalScore);
         contract.setRiskLevel(riskLevel);
+        contract.setAuditor(auditor);
         smartContractRepository.save(contract);
+
+        try {
+            kafkaProducerService.sendAuditCompletedEvent(contractId, contract.getName(), finalScore, auditor);
+        } catch (Exception e) {
+            System.err.println("Failed to send Kafka event: " + e.getMessage());
+        }
 
         sendSseEvent(emitter, "Analysis complete. " + findings.size() + " findings saved.");
         

@@ -31,6 +31,9 @@ public class SmartContract {
     @Column(name = "risk_level")
     private String riskLevel;
 
+    @Column(name = "auditor")
+    private String auditor;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

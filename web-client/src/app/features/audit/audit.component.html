@@ -89,6 +89,23 @@
                <mat-icon class="text-green-400">check_circle</mat-icon>
                Rapport: <span class="text-indigo-400">{{ parsedStructure.contractName || 'Contrat Inconnu' }}</span>
              </h2>
+             <button mat-flat-button color="accent" (click)="downloadPdf()">
+               <mat-icon>picture_as_pdf</mat-icon> Télécharger le Rapport PDF
+             </button>
+          </div>
+
+          <div *ngIf="showPdfPreview" class="mb-6 p-4 bg-white/5 border border-white/10 rounded-xl">
+             <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg text-white font-medium">Aperçu du Rapport</h3>
+                <button mat-icon-button (click)="showPdfPreview = false"><mat-icon>close</mat-icon></button>
+             </div>
+             <div class="h-96 overflow-y-auto bg-gray-900 border border-white/20 rounded flex justify-center p-2">
+                 <pdf-viewer [src]="pdfSrc"
+                             [render-text]="true"
+                             [original-size]="false"
+                             style="width: 100%; max-width: 800px; height: 100%;">
+                 </pdf-viewer>
+             </div>
           </div>
 
           <mat-accordion multi="true" class="space-y-4">

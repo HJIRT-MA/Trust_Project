@@ -115,6 +115,11 @@
             <artifactId>easy-rules-core</artifactId>
             <version>4.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>4.10.0</version>
+        </dependency>
     </dependencies>
 
     <build>

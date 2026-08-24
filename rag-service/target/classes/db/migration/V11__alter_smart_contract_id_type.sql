@@ -1,0 +1,1 @@
+ALTER TABLE smart_contracts ALTER COLUMN id TYPE BIGINT;

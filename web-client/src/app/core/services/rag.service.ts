@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import {blob} from "node:stream/consumers";
 
 export interface ChunkResult {
   text: string;
@@ -15,6 +14,7 @@ export class RagService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8082/api/rag';
   private guardApiUrl = 'http://localhost:8082/api/guard';
+  private auditApiUrl = 'http://localhost:8082/api/audit';
 
   searchSemantic(query: string, topK: number = 3): Observable<ChunkResult[]> {
     return this.http.post<ChunkResult[]>(`${this.apiUrl}/search`, { query, topK });
@@ -46,7 +46,7 @@ export class RagService {
 
   downloadConversationPdf(id: number): void{
     this.http.get(`${this.apiUrl}/conversations/${id}/pdf`, {responseType: 'blob'}).subscribe(
-      blob =>{
+      (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a=document.createElement('a');
         a.href = url;
@@ -62,7 +62,7 @@ export class RagService {
 
   downloadGuardReport(id: number): void {
     this.http.get(`${this.guardApiUrl}/report/${id}/pdf`, {responseType: 'blob'}).subscribe(
-      blob => {
+      (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -76,10 +76,26 @@ export class RagService {
   uploadSmartContract(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<any>(`http://localhost:8082/api/audit/upload`, formData);
+    return this.http.post<any>(`${this.auditApiUrl}/upload`, formData);
   }
 
   startSecurityAudit(contractId: number): Observable<any> {
-    return this.http.post(`http://localhost:8082/api/audit/${contractId}/analyze`, {}, { responseType: 'text' });
+    return this.http.post(`${this.auditApiUrl}/${contractId}/analyze`, {}, { responseType: 'text' });
+  }
+
+  getAuditHistory(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.auditApiUrl}/history`);
+  }
+
+  getFindings(contractId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.auditApiUrl}/${contractId}/findings`);
+  }
+
+  downloadPdfReport(contractId: number): Observable<Blob> {
+    return this.http.get(`${this.auditApiUrl}/${contractId}/report/pdf`, { responseType: 'blob' });
+  }
+
+  deleteAudit(contractId: number): Observable<void> {
+    return this.http.delete<void>(`${this.auditApiUrl}/${contractId}`);
   }
 }

@@ -6,6 +6,10 @@
         @if (isAdmin) {
           <a routerLink="/dashboard" routerLinkActive="bg-indigo-500/20 text-indigo-300" class="px-4 py-2 rounded-xl font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">Dashboard (Admin)</a>
           <a routerLink="/audit" routerLinkActive="bg-indigo-500/20 text-indigo-300" class="px-4 py-2 rounded-xl font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">Auditor (Admin)</a>
+          <a routerLink="/audit-history" routerLinkActive="bg-indigo-500/20 text-indigo-300" class="px-4 py-2 rounded-xl font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">Historique Audits (Admin)</a>
+        }
+        @if (isAdmin || isViewer) {
+          <a routerLink="/timeline" routerLinkActive="bg-indigo-500/20 text-indigo-300" class="px-4 py-2 rounded-xl font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">Blockchain Timeline</a>
         }
       </div>
       

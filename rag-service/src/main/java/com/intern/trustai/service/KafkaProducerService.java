@@ -22,4 +22,15 @@ public class KafkaProducerService {
 
         kafkaTemplate.send(TOPIC, String.valueOf(messageId), event);
     }
+
+    public void sendAuditCompletedEvent(Long contractId, String contractName, int score, String auditor) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("contractId", contractId);
+        event.put("contractName", contractName);
+        event.put("globalRiskScore", score);
+        event.put("auditor", auditor);
+        event.put("timestamp", System.currentTimeMillis());
+
+        kafkaTemplate.send("Audit-completed", String.valueOf(contractId), event);
+    }
 }

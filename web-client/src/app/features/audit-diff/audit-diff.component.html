@@ -1,0 +1,82 @@
+<div class="h-full flex flex-col p-6 space-y-6 max-w-7xl mx-auto w-full">
+  <div class="flex items-center gap-4">
+    <button mat-icon-button color="primary" (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
+    <div>
+      <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+        Comparaison des Audits
+      </h1>
+      <p class="text-gray-400 mt-2 text-sm">
+        Comparaison des vulnérabilités entre le contrat #{{id1}} et le contrat #{{id2}}.
+      </p>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="flex justify-center py-20">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading" class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+    
+    <!-- Version 1 -->
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 overflow-y-auto">
+      <h2 class="text-xl font-bold text-white mb-4">Contrat #{{id1}} ({{findings1.length}} failles)</h2>
+      
+      <div *ngIf="findings1.length === 0" class="text-green-400 italic py-4 flex items-center gap-2">
+         <mat-icon>check_circle</mat-icon> Aucune faille détectée
+      </div>
+
+      <div class="space-y-4">
+         <mat-card *ngFor="let f of findings1" class="!bg-black/40 !border !border-white/10">
+           <mat-card-header class="!mb-2">
+             <mat-card-title class="!text-sm !text-gray-200 !font-medium">
+                <span class="px-2 py-0.5 rounded text-[10px] mr-2 uppercase font-bold" [ngClass]="{
+                    'bg-red-500/20 text-red-300 border border-red-500/50': f.severity === 'CRITICAL',
+                    'bg-orange-500/20 text-orange-300 border border-orange-500/50': f.severity === 'HIGH',
+                    'bg-yellow-500/20 text-yellow-300 border border-yellow-500/50': f.severity === 'MEDIUM',
+                    'bg-blue-500/20 text-blue-300 border border-blue-500/50': f.severity === 'LOW'
+                  }">{{f.severity}}</span>
+                {{f.title}}
+             </mat-card-title>
+           </mat-card-header>
+           <mat-card-content class="!text-xs !text-gray-400">
+             {{f.description}}
+             <div *ngIf="f.codeSnippet" class="mt-2 p-2 bg-black/60 font-mono text-[10px] text-red-400 rounded">
+               {{f.codeSnippet | slice:0:150}}{{f.codeSnippet.length > 150 ? '...' : ''}}
+             </div>
+           </mat-card-content>
+         </mat-card>
+      </div>
+    </div>
+
+    <!-- Version 2 -->
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 overflow-y-auto">
+      <h2 class="text-xl font-bold text-white mb-4">Contrat #{{id2}} ({{findings2.length}} failles)</h2>
+      
+      <div *ngIf="findings2.length === 0" class="text-green-400 italic py-4 flex items-center gap-2">
+         <mat-icon>check_circle</mat-icon> Aucune faille détectée
+      </div>
+
+      <div class="space-y-4">
+         <mat-card *ngFor="let f of findings2" class="!bg-black/40 !border !border-white/10">
+           <mat-card-header class="!mb-2">
+             <mat-card-title class="!text-sm !text-gray-200 !font-medium">
+                <span class="px-2 py-0.5 rounded text-[10px] mr-2 uppercase font-bold" [ngClass]="{
+                    'bg-red-500/20 text-red-300 border border-red-500/50': f.severity === 'CRITICAL',
+                    'bg-orange-500/20 text-orange-300 border border-orange-500/50': f.severity === 'HIGH',
+                    'bg-yellow-500/20 text-yellow-300 border border-yellow-500/50': f.severity === 'MEDIUM',
+                    'bg-blue-500/20 text-blue-300 border border-blue-500/50': f.severity === 'LOW'
+                  }">{{f.severity}}</span>
+                {{f.title}}
+             </mat-card-title>
+           </mat-card-header>
+           <mat-card-content class="!text-xs !text-gray-400">
+             {{f.description}}
+             <div *ngIf="f.codeSnippet" class="mt-2 p-2 bg-black/60 font-mono text-[10px] text-red-400 rounded">
+               {{f.codeSnippet | slice:0:150}}{{f.codeSnippet.length > 150 ? '...' : ''}}
+             </div>
+           </mat-card-content>
+         </mat-card>
+      </div>
+    </div>
+  </div>
+</div>
