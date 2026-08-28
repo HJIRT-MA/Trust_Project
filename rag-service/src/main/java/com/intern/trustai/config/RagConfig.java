@@ -14,10 +14,12 @@ import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.Duration;
 
 @Configuration
+@EnableScheduling
 public class RagConfig {
 
     @Value("${openai.api.key}")
@@ -57,7 +59,7 @@ public class RagConfig {
     public ChatLanguageModel chatLanguageModel() {
         return OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3:latest")
+                .modelName("llama3.2:3b")
                 .timeout(Duration.ofMinutes(5))
                 .build();
    }
@@ -66,7 +68,7 @@ public class RagConfig {
     public StreamingChatLanguageModel streamingChatLanguageModel() {
         return OllamaStreamingChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3:latest")
+                .modelName("llama3.2:3b")
                 .timeout(Duration.ofMinutes(5))
                 .build();
     }

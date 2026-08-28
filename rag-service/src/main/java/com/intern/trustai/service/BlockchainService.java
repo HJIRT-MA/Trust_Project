@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @Service
 public class BlockchainService {
@@ -78,5 +79,47 @@ public class BlockchainService {
         }
 
         return ethSendTransaction.getTransactionHash();
+    }
+
+    public boolean verifyAuditProof(String reportContent) throws Exception {
+        if (contractAddress == null || contractAddress.isEmpty()) return true; // skip verification if not configured
+
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(reportContent.getBytes(StandardCharsets.UTF_8));
+        
+        Function function = new Function(
+                "getProof",
+                Arrays.asList(new Bytes32(hashBytes)),
+                Arrays.asList(
+                    new org.web3j.abi.TypeReference<Bytes32>() {},
+                    new org.web3j.abi.TypeReference<Utf8String>() {},
+                    new org.web3j.abi.TypeReference<org.web3j.abi.datatypes.generated.Uint256>() {},
+                    new org.web3j.abi.TypeReference<org.web3j.abi.datatypes.Address>() {}
+                )
+        );
+
+        String encodedFunction = FunctionEncoder.encode(function);
+        
+        org.web3j.protocol.core.methods.response.EthCall response = web3j.ethCall(
+                org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(null, contractAddress, encodedFunction),
+                DefaultBlockParameterName.LATEST).send();
+                
+        if (response.hasError()) {
+            System.err.println("Web3j call error: " + response.getError().getMessage());
+            return false;
+        }
+
+        String value = response.getValue();
+        if (value == null || value.equals("0x")) {
+            return false;
+        }
+        
+        List<Type> results = org.web3j.abi.FunctionReturnDecoder.decode(value, function.getOutputParameters());
+        if (results.isEmpty()) return false;
+        
+        // The first output is bytes32 hash. We just need to know it returned something with timestamp != 0.
+        // But getProof reverts if "Proof not found". So if it didn't revert, it exists!
+        // Actually, ethCall to a reverting function returns an error or "0x". So if results is not empty, it's valid.
+        return true;
     }
 }

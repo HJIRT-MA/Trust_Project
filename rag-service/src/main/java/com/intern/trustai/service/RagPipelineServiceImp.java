@@ -196,6 +196,12 @@ public class RagPipelineServiceImp implements RagPipelineService {
         userMessage.setContent(userQuery);
         chatMessageRepository.save(userMessage);
 
+        try {
+            kafkaProducerService.sendRagInteractionEvent(userMessage.getId(), userId, userQuery);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         List<ChunkResponse> relevantChunks = searchSimilarChunks(userQuery, topK);
         String context = relevantChunks.stream().map(ChunkResponse::text).collect(Collectors.joining("\n\n"));
 

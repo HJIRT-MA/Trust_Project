@@ -80,7 +80,19 @@ export class RagService {
   }
 
   startSecurityAudit(contractId: number): Observable<any> {
-    return this.http.post(`${this.auditApiUrl}/${contractId}/analyze`, {}, { responseType: 'text' });
+    return this.http.post(`http://localhost:8082/api/audit/${contractId}/analyze`, {}, { responseType: 'text' });
+  }
+
+  getProofs(): Observable<any[]> {
+    return this.http.get<any[]>(`http://localhost:8082/api/proofs`);
+  }
+
+  verifyProof(id: number): Observable<{valid: boolean, error?: string}> {
+    return this.http.get<{valid: boolean, error?: string}>(`http://localhost:8082/api/proofs/verify/${id}`);
+  }
+
+  getProofStats(): Observable<any> {
+    return this.http.get<any>(`http://localhost:8082/api/proofs/stats`);
   }
 
   getAuditHistory(): Observable<any[]> {

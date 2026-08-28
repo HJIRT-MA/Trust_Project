@@ -39,8 +39,15 @@ export const routes: Routes = [
     data: { roles: ['admin', 'viewer'] } 
   },
   {
+    path: 'dashboard-viewer',
+    loadComponent: () => import('./features/viewer-dashboard/viewer-dashboard.component').then(m => m.ViewerDashboardComponent),
+    canActivate: [authGuard],
+    data: { roles: ['admin', 'viewer'] }
+  },
+  {
     path: '',
     redirectTo: 'chat',
     pathMatch: 'full' // Redirige vers /chat par défaut
   }
 ];
+
