@@ -13,6 +13,7 @@ public class KafkaProducerService {
     private static final String TOPIC_HALLUCINATION = "hallucination-checks";
     private static final String TOPIC_AUDIT = "audit-results";
     private static final String TOPIC_RAG = "rag-interactions";
+    private static final String TOPIC_SECURITY_ALERT = "security-alerts";
 
     public KafkaProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
@@ -47,5 +48,16 @@ public class KafkaProducerService {
         event.put("timestamp", System.currentTimeMillis());
 
         kafkaTemplate.send(TOPIC_RAG, String.valueOf(messageId), event);
+    }
+
+    public void sendSecurityAlert(Integer proofId, String alertMessage) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("proofId", proofId);
+        event.put("alert", "TAMPERED_PROOF_DETECTED");
+        event.put("message", alertMessage);
+        event.put("timestamp", System.currentTimeMillis());
+        event.put("severity", "CRITICAL");
+
+        kafkaTemplate.send(TOPIC_SECURITY_ALERT, String.valueOf(proofId), event);
     }
 }

@@ -15,6 +15,7 @@ com\intern\trustai\controller\AuditController.class
 com\intern\trustai\RagServiceApplication.class
 com\intern\trustai\repository\AuditFindingRepository.class
 com\intern\trustai\service\HallucinationGuardService.class
+com\intern\trustai\service\BlockchainService.class
 com\intern\trustai\repository\HallucinationCheckRepository.class
 com\intern\trustai\security\TenantAspect.class
 com\intern\trustai\security\TenantContext.class
@@ -35,12 +36,16 @@ com\intern\trustai\service\SwcRagService$1.class
 com\intern\trustai\service\BlockchainService$2.class
 com\intern\trustai\service\AuditService.class
 com\intern\trustai\entity\ReportSignature.class
+com\intern\trustai\service\AiActComplianceReportService.class
 com\intern\trustai\service\BlockchainAnchorService.class
 com\intern\trustai\entity\Conversation.class
 com\intern\trustai\controller\BlockchainProofController.class
+com\intern\trustai\config\Web3Config.class
 com\intern\trustai\service\KafkaProducerService.class
 com\intern\trustai\dto\ChunkResponse.class
 com\intern\trustai\dto\ReportHistoryDTO.class
+com\intern\trustai\service\SecurityPdfReportService.class
+com\intern\trustai\repository\AuditReportSignatureRepository.class
 com\intern\trustai\config\RagConfig.class
 com\intern\trustai\entity\Document.class
 com\intern\trustai\entity\Chunk.class
@@ -51,6 +56,7 @@ com\intern\trustai\service\BlockchainService$1.class
 com\intern\trustai\service\RagPipelineServiceImp$1.class
 com\intern\trustai\service\HallucinationGuardService$GuardResult.class
 com\intern\trustai\dto\RequestHistoryItem.class
+com\intern\trustai\entity\AuditReportSignature.class
 com\intern\trustai\entity\HallucinationCheck.class
 com\intern\trustai\dto\ContractStructureDTO.class
 com\intern\trustai\controller\GuardController.class

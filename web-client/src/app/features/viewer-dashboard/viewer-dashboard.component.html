@@ -1,9 +1,14 @@
 <div class="p-8 max-w-7xl mx-auto text-white">
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
-      Viewer Dashboard
-    </h1>
-    <p class="text-gray-400">Métriques de fiabilité et d'intégrité on-chain (Lecture seule)</p>
+  <div class="mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+        Viewer Dashboard
+      </h1>
+      <p class="text-gray-400">Métriques de fiabilité et d'intégrité on-chain (Lecture seule)</p>
+    </div>
+    <button mat-stroked-button color="accent" (click)="exportComplianceReport()">
+      <mat-icon>picture_as_pdf</mat-icon> Rapport AI Act
+    </button>
   </div>
 
   <div *ngIf="loading" class="flex justify-center my-12">

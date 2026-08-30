@@ -110,4 +110,17 @@ export class RagService {
   deleteAudit(contractId: number): Observable<void> {
     return this.http.delete<void>(`${this.auditApiUrl}/${contractId}`);
   }
+
+  downloadAiActReport(): void {
+    this.http.get(`http://localhost:8082/api/proofs/compliance-report/pdf`, {responseType: 'blob'}).subscribe(
+      (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Rapport_Conformite_AI_Act.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+    );
+  }
 }

@@ -74,4 +74,8 @@ export class ViewerDashboardComponent implements OnInit {
     if (!hash || hash.length < 10) return hash;
     return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
   }
+
+  exportComplianceReport(): void {
+    this.ragService.downloadAiActReport();
+  }
 }

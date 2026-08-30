@@ -30,7 +30,10 @@
       </select>
     </div>
     
-    <div class="ml-auto flex items-center">
+    <div class="ml-auto flex items-center gap-2">
+        <button mat-stroked-button color="accent" (click)="exportComplianceReport()">
+          <mat-icon>picture_as_pdf</mat-icon> Rapport AI Act
+        </button>
         <button mat-stroked-button color="primary" (click)="fetchProofs()">
           <mat-icon>refresh</mat-icon> Actualiser
         </button>

@@ -70,6 +70,10 @@ export class TimelineComponent implements OnInit, OnDestroy {
     return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
   }
 
+  exportComplianceReport(): void {
+    this.ragService.downloadAiActReport();
+  }
+
   verifyProof(proof: any): void {
     this.verifyingMap[proof.id] = true;
     this.validationResults[proof.id] = undefined as any;
