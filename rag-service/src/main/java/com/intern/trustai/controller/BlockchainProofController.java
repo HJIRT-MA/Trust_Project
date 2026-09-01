@@ -1,7 +1,7 @@
 package com.intern.trustai.controller;
 
 import com.intern.trustai.entity.BlockchainProof;
-import com.intern.trustai.repository.BlockchainProofRepository;
+import com.intern.trustai.service.BlockchainProofService;
 import com.intern.trustai.service.BlockchainService;
 import com.intern.trustai.service.KafkaProducerService;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,16 +22,16 @@ import java.util.Map;
 @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
 public class BlockchainProofController {
 
-    private final BlockchainProofRepository proofRepository;
+    private final BlockchainProofService proofService;
     private final BlockchainService blockchainService;
     private final KafkaProducerService kafkaProducerService;
     private final com.intern.trustai.service.AiActComplianceReportService aiActComplianceReportService;
 
-    public BlockchainProofController(BlockchainProofRepository proofRepository, 
+    public BlockchainProofController(BlockchainProofService proofService, 
                                      BlockchainService blockchainService,
                                      KafkaProducerService kafkaProducerService,
                                      com.intern.trustai.service.AiActComplianceReportService aiActComplianceReportService) {
-        this.proofRepository = proofRepository;
+        this.proofService = proofService;
         this.blockchainService = blockchainService;
         this.kafkaProducerService = kafkaProducerService;
         this.aiActComplianceReportService = aiActComplianceReportService;
@@ -44,22 +43,7 @@ public class BlockchainProofController {
             @RequestParam(name = "status", required = false) String status,
             @RequestParam(name = "userId", required = false) String userId) {
         try {
-            List<BlockchainProof> proofs;
-            if (type != null && !type.isEmpty()) {
-                proofs = proofRepository.findByEventType(type);
-            } else if (status != null && !status.isEmpty()) {
-                proofs = proofRepository.findByStatus(status);
-            } else if (userId != null && !userId.isEmpty()) {
-                proofs = proofRepository.findByUserId(userId);
-            } else {
-                proofs = proofRepository.findAll();
-            }
-            
-            List<BlockchainProof> sortedProofs = proofs.stream()
-                .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
-                .toList();
-                
-            return ResponseEntity.ok(sortedProofs);
+            return ResponseEntity.ok(proofService.getFilteredProofs(type, status, userId));
         } catch (Exception e) {
             java.io.StringWriter sw = new java.io.StringWriter();
             e.printStackTrace(new java.io.PrintWriter(sw));
@@ -69,7 +53,7 @@ public class BlockchainProofController {
 
     @GetMapping("/verify/{id}")
     public ResponseEntity<Map<String, Object>> verifyProof(@PathVariable Integer id) {
-        BlockchainProof proof = proofRepository.findById(id).orElse(null);
+        BlockchainProof proof = proofService.getProofById(id).orElse(null);
         if (proof == null) return ResponseEntity.notFound().build();
 
         Map<String, Object> response = new HashMap<>();
@@ -78,7 +62,6 @@ public class BlockchainProofController {
             response.put("valid", isValid);
 
             if (!isValid) {
-                // Si altéré, on génère une alerte Kafka CRITICAL
                 kafkaProducerService.sendSecurityAlert(id, "Blockchain verification failed! Payload hash does not match on-chain record.");
             }
         } catch (Exception e) {
@@ -90,32 +73,7 @@ public class BlockchainProofController {
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats() {
-        List<BlockchainProof> proofs = proofRepository.findAll();
-        
-        long total = proofs.size();
-        long confirmed = proofs.stream().filter(p -> "CONFIRMED".equals(p.getStatus())).count();
-        
-        Map<String, Long> byType = new HashMap<>();
-        for (BlockchainProof p : proofs) {
-            byType.put(p.getEventType(), byType.getOrDefault(p.getEventType(), 0L) + 1);
-        }
-        
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("total", total);
-        stats.put("confirmed", confirmed);
-        stats.put("confirmationRate", total > 0 ? (double) confirmed / total * 100 : 0);
-        stats.put("byType", byType);
-        
-        // Latest audits (only audit-results)
-        List<BlockchainProof> recentAudits = proofs.stream()
-            .filter(p -> "audit-results".equals(p.getEventType()))
-            .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
-            .limit(5)
-            .toList();
-            
-        stats.put("recentAudits", recentAudits);
-
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(proofService.getDashboardStats());
     }
 
     @GetMapping("/compliance-report/pdf")

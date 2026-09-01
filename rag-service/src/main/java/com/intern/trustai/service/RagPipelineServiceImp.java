@@ -391,7 +391,37 @@ public class RagPipelineServiceImp implements RagPipelineService {
             throw new RuntimeException("Failed to generate PDF", e);
 
         }
+    }
 
+    @Override
+    public List<com.intern.trustai.entity.Document> getAllDocuments() {
+        return documentRepository.findAll();
+    }
 
+    @Override
+    public List<Conversation> getUserConversations(String userId) {
+        return conversationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Override
+    public List<ChatMessage> getConversationMessages(Long conversationId, String userId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        if (!conversation.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized to access this conversation");
+        }
+        return chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteConversation(Long conversationId, String userId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        if (!conversation.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized to access this conversation");
+        }
+        chatMessageRepository.deleteByConversationId(conversationId);
+        conversationRepository.delete(conversation);
     }
 }

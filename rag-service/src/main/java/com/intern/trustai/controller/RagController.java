@@ -31,26 +31,17 @@ import com.intern.trustai.dto.DashboardStatsDTO;
 public class RagController {
 
     private final RagPipelineService ragService;
-    private final DocumentRepository documentRepository;
     private final ResourcePatternResolver resourcePatternResolver;
-    private final ConversationRepository conversationRepository;
-    private final ChatMessageRepository chatMessageRepository;
-    private final RagPipelineService ragPipelineService;
 
-    public RagController(RagPipelineService ragService, DocumentRepository documentRepository, ResourcePatternResolver resourcePatternResolver,
-                         ConversationRepository conversationRepository, ChatMessageRepository chatMessageRepository, RagPipelineService ragPipelineService) {
+    public RagController(RagPipelineService ragService, ResourcePatternResolver resourcePatternResolver) {
         this.ragService = ragService;
-        this.documentRepository = documentRepository;
         this.resourcePatternResolver = resourcePatternResolver;
-        this.conversationRepository = conversationRepository;
-        this.chatMessageRepository = chatMessageRepository;
-        this.ragPipelineService = ragPipelineService;
     }
 
     @GetMapping("/documents")
     @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
     public ResponseEntity<List<Document>> getAllDocuments() {
-        return ResponseEntity.ok(documentRepository.findAll());
+        return ResponseEntity.ok(ragService.getAllDocuments());
     }
 
     @PostMapping("/chat")
@@ -89,7 +80,7 @@ public class RagController {
     @GetMapping("/dashboard/metrics")
     @PreAuthorize("hasRole('admin')")
     public DashboardStatsDTO getDashboardMetrics() {
-        return ragPipelineService.getDashboardStats();
+        return ragService.getDashboardStats();
     }
 
 
@@ -122,7 +113,7 @@ public class RagController {
     public ResponseEntity<List<Conversation>> getConversations() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
-        return ResponseEntity.ok(conversationRepository.findByUserIdOrderByCreatedAtDesc(userId));
+        return ResponseEntity.ok(ragService.getUserConversations(userId));
     }
 
 
@@ -131,28 +122,30 @@ public class RagController {
     public ResponseEntity<List<ChatMessage>> getConversationMessages(@PathVariable("id") Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
-        Conversation conversation = conversationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conversation not found"));
-        if (!conversation.getUserId().equals(userId)) {
-            return ResponseEntity.status(403).build();
+        try {
+            return ResponseEntity.ok(ragService.getConversationMessages(id, userId));
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("Unauthorized to access this conversation")) {
+                return ResponseEntity.status(403).build();
+            }
+            throw e;
         }
-        return ResponseEntity.ok(chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(id));
     }
 
     @DeleteMapping("/conversations/{id}")
     @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
-    @Transactional
     public ResponseEntity<String> deleteConversation(@PathVariable("id") Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
-        Conversation conversation = conversationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conversation not found"));
-        if (!conversation.getUserId().equals(userId)) {
-            return ResponseEntity.status(403).build();
+        try {
+            ragService.deleteConversation(id, userId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("Unauthorized to access this conversation")) {
+                return ResponseEntity.status(403).build();
+            }
+            throw e;
         }
-        chatMessageRepository.deleteByConversationId(id);
-        conversationRepository.delete(conversation);
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/conversations/{id}/pdf")

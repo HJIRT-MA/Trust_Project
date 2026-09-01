@@ -10,7 +10,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthTransaction;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-
+import org.springframework.messaging.MessageHeaders;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,7 +31,7 @@ public class BlockchainAnchorService {
     }
 
     @KafkaListener(topics = {"rag-interactions", "audit-results", "hallucination-checks"}, groupId = "blockchain-anchor-group")
-    public void listenAndAnchor(String message, org.springframework.messaging.MessageHeaders headers) {
+    public void listenAndAnchor(String message, MessageHeaders headers) {
         try {
             String topic = headers.get("kafka_receivedTopic", String.class);
             Map<String, Object> eventData = objectMapper.readValue(message, Map.class);
@@ -56,9 +56,11 @@ public class BlockchainAnchorService {
             proof.setEventType(topic);
             proof.setTxHash(txHash);
             proof.setTimestamp(System.currentTimeMillis());
+
             proof.setStatus("skipped".equals(txHash) ? "FAILED" : "PENDING");
             proof.setUserId(userId);
             proof.setPayload(message);
+            
             proofRepository.save(proof);
 
         } catch (Exception e) {

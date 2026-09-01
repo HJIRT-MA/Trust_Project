@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
 public class GuardController {
 
     private final PdfReportService pdfReportService;
-    private final ReportSignatureRepository reportSignatureRepository;
+    private final com.intern.trustai.service.GuardService guardService;
 
-    public GuardController(PdfReportService pdfReportService, ReportSignatureRepository reportSignatureRepository) {
+    public GuardController(PdfReportService pdfReportService, com.intern.trustai.service.GuardService guardService) {
         this.pdfReportService = pdfReportService;
-        this.reportSignatureRepository = reportSignatureRepository;
+        this.guardService = guardService;
     }
 
     @GetMapping("/report/{id}/pdf")
@@ -48,13 +48,6 @@ public class GuardController {
     @GetMapping("/reports")
     @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
     public ResponseEntity<List<ReportHistoryDTO>> getReportHistory() {
-        List<ReportHistoryDTO> history = reportSignatureRepository.findAllByOrderByCreatedAtDesc().stream()
-                .map(sig -> new ReportHistoryDTO(
-                        sig.getMessage().getId(),
-                        sig.getCreatedAt().toString(),
-                        sig.getMessage().getConfidenceScore(),
-                        sig.getMessage().getConversation().getUserId()
-                )).collect(Collectors.toList());
-        return ResponseEntity.ok(history);
+        return ResponseEntity.ok(guardService.getReportHistory());
     }
 }

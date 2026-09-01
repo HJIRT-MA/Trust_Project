@@ -23,24 +23,15 @@ public class AuditController {
 
     private final AuditService auditService;
     private final com.intern.trustai.service.SecurityAuditService securityAuditService;
-    private final SmartContractRepository smartContractRepository;
-    private final AuditFindingRepository findingRepository;
     private final SecurityPdfReportService pdfReportService;
-    private final com.intern.trustai.repository.AuditReportSignatureRepository signatureRepository;
     private final java.util.Map<Long, org.springframework.web.servlet.mvc.method.annotation.SseEmitter> emitters = new java.util.concurrent.ConcurrentHashMap<>();
 
     public AuditController(AuditService auditService, 
                            com.intern.trustai.service.SecurityAuditService securityAuditService,
-                           SmartContractRepository smartContractRepository,
-                           AuditFindingRepository findingRepository,
-                           SecurityPdfReportService pdfReportService,
-                           com.intern.trustai.repository.AuditReportSignatureRepository signatureRepository) {
+                           SecurityPdfReportService pdfReportService) {
         this.auditService = auditService;
         this.securityAuditService = securityAuditService;
-        this.smartContractRepository = smartContractRepository;
-        this.findingRepository = findingRepository;
         this.pdfReportService = pdfReportService;
-        this.signatureRepository = signatureRepository;
     }
 
     @PostMapping("/upload")
@@ -112,13 +103,13 @@ public class AuditController {
     @GetMapping("/history")
     @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
     public ResponseEntity<java.util.List<SmartContract>> getHistory() {
-        return ResponseEntity.ok(smartContractRepository.findAll());
+        return ResponseEntity.ok(auditService.getAllContracts());
     }
 
     @GetMapping("/{contractId}/findings")
     @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
     public ResponseEntity<java.util.List<AuditFinding>> getFindings(@PathVariable("contractId") Long contractId) {
-        return ResponseEntity.ok(findingRepository.findBySmartContractId(contractId));
+        return ResponseEntity.ok(auditService.getFindingsByContractId(contractId));
     }
 
     @GetMapping("/{contractId}/report/pdf")
@@ -138,11 +129,8 @@ public class AuditController {
 
     @DeleteMapping("/{contractId}")
     @PreAuthorize("hasAnyRole('admin', 'analyst')")
-    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<Void> deleteAudit(@PathVariable("contractId") Long contractId) {
-        findingRepository.deleteBySmartContractId(contractId);
-        signatureRepository.deleteBySmartContractId(contractId);
-        smartContractRepository.deleteById(contractId);
+        auditService.deleteAudit(contractId);
         return ResponseEntity.noContent().build();
     }
 
