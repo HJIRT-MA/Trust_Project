@@ -1,0 +1,35 @@
+# Build output
+target/
+build/
+*.class
+
+# Maven (never vendor the Maven distribution itself)
+/maven/
+/maven.zip
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Hardhat / blockchain build artifacts
+blockchain/artifacts/
+blockchain/cache/
+
+# Secrets / environment files (keep the .example templates)
+.env
+!.env.example
+*/.env
+!*/.env.example
+
+# IDEs and editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,6 +1,0 @@
-CREATE TABLE smart_contracts (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
