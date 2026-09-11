@@ -1,6 +1,7 @@
 package com.intern.trustai.security;
 
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -22,6 +23,15 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    @Value("${app.cors.allowed-origins}")
+    private List<String> allowedOrigins;
+
+    private final SseBearerTokenResolver sseBearerTokenResolver;
+
+    public SecurityConfig(SseBearerTokenResolver sseBearerTokenResolver) {
+        this.sseBearerTokenResolver = sseBearerTokenResolver;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -31,10 +41,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/api/audit/stream/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2->oauth2
-                        .jwt(jwt->jwt.jwtAuthenticationConverter((jwtAuthenticationConverter()))))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(sseBearerTokenResolver)
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter((jwtAuthenticationConverter()))))
                         .addFilterAfter(new TenantFilter(), BearerTokenAuthenticationFilter.class);
 
         return http.build();
@@ -50,7 +60,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
         configuration.setExposedHeaders(List.of("x-auth-token"));

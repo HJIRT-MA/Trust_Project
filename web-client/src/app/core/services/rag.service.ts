@@ -12,9 +12,11 @@ export interface ChunkResult {
 })
 export class RagService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8082/api/rag';
-  private guardApiUrl = 'http://localhost:8082/api/guard';
-  private auditApiUrl = 'http://localhost:8082/api/audit';
+  // Tout passe par le gateway-service (point d'entrée unique, port 8080),
+  // qui route vers rag-service (voir gateway-service/application.yml).
+  private apiUrl = 'http://localhost:8080/api/rag';
+  private guardApiUrl = 'http://localhost:8080/api/guard';
+  private auditApiUrl = 'http://localhost:8080/api/audit';
 
   searchSemantic(query: string, topK: number = 3): Observable<ChunkResult[]> {
     return this.http.post<ChunkResult[]>(`${this.apiUrl}/search`, { query, topK });
@@ -80,19 +82,19 @@ export class RagService {
   }
 
   startSecurityAudit(contractId: number): Observable<any> {
-    return this.http.post(`http://localhost:8082/api/audit/${contractId}/analyze`, {}, { responseType: 'text' });
+    return this.http.post(`http://localhost:8080/api/audit/${contractId}/analyze`, {}, { responseType: 'text' });
   }
 
   getProofs(): Observable<any[]> {
-    return this.http.get<any[]>(`http://localhost:8082/api/proofs`);
+    return this.http.get<any[]>(`http://localhost:8080/api/proofs`);
   }
 
   verifyProof(id: number): Observable<{valid: boolean, error?: string}> {
-    return this.http.get<{valid: boolean, error?: string}>(`http://localhost:8082/api/proofs/verify/${id}`);
+    return this.http.get<{valid: boolean, error?: string}>(`http://localhost:8080/api/proofs/verify/${id}`);
   }
 
   getProofStats(): Observable<any> {
-    return this.http.get<any>(`http://localhost:8082/api/proofs/stats`);
+    return this.http.get<any>(`http://localhost:8080/api/proofs/stats`);
   }
 
   getAuditHistory(): Observable<any[]> {
@@ -112,7 +114,7 @@ export class RagService {
   }
 
   downloadAiActReport(): void {
-    this.http.get(`http://localhost:8082/api/proofs/compliance-report/pdf`, {responseType: 'blob'}).subscribe(
+    this.http.get(`http://localhost:8080/api/proofs/compliance-report/pdf`, {responseType: 'blob'}).subscribe(
       (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

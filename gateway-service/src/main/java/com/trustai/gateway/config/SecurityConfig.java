@@ -11,19 +11,30 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+    private final SseBearerTokenServerConverter sseBearerTokenServerConverter;
+
+    public SecurityConfig(SseBearerTokenServerConverter sseBearerTokenServerConverter) {
+        this.sseBearerTokenServerConverter = sseBearerTokenServerConverter;
+    }
+
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
             .authorizeExchange(exchanges -> exchanges
-                // Permettre l'accès public à certaines routes si nécessaire
-                // .pathMatchers("/public/**").permitAll()
+                // Le handshake HTTP d'upgrade WebSocket doit rester public : l'authentification
+                // du canal STOMP se fait via le frame CONNECT (header Authorization applicatif),
+                // pas via un Bearer token sur la requête HTTP d'upgrade. rag-service applique la
+                // même règle sur /ws/** (voir SecurityConfig côté rag-service).
+                .pathMatchers("/ws/**").permitAll()
                 // Sécuriser tout le reste
                 .anyExchange().authenticated()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+            .oauth2ResourceServer(oauth2 -> oauth2
+                    .bearerTokenConverter(sseBearerTokenServerConverter)
+                    .jwt(Customizer.withDefaults()))
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .cors(Customizer.withDefaults());
-        
+
         return http.build();
     }
 }

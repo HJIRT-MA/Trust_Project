@@ -13,7 +13,7 @@
       @for (conv of conversations; track conv.id) {
         <div class="group flex items-center justify-between w-full p-3 rounded-lg transition-colors text-sm cursor-pointer"
              [ngClass]="{
-               'bg-indigo-500/20 text-indigo-300 font-bold': conv.id === currentConversationId,
+               'bg-brand-500/20 text-brand-300 font-bold': conv.id === currentConversationId,
                'text-white/80 hover:bg-white/5': conv.id !== currentConversationId
              }"
              (click)="selectConversation(conv.id)">
@@ -37,7 +37,7 @@
     <!-- Chat Header -->
     <div class="p-4 border-b border-white/10 bg-white/5 flex justify-between items-center">
       <div>
-        <h1 class="text-xl font-bold text-white/90 m-0">Assistant IA</h1>
+        <h1 class="font-display text-xl font-semibold text-white/90 m-0">Assistant IA</h1>
         <p class="text-sm text-white/50 m-0">Posez une question en langage naturel.</p>
       </div>
       @if (currentConversationId) {
@@ -60,15 +60,15 @@
         <div class="flex" [class.justify-end]="msg.role === 'USER'">
           <div class="max-w-[80%] rounded-2xl p-4" 
                [ngClass]="{
-                 'bg-indigo-600 text-white': msg.role === 'USER',
+                 'bg-brand-600 text-white': msg.role === 'USER',
                  'bg-[rgba(255,255,255,0.08)] text-white/90 border border-white/10': msg.role === 'AI'
                }">
             <div class="flex items-center justify-between mb-1">
               <div class="flex items-center gap-2" [class.justify-end]="msg.role === 'USER'">
-                <mat-icon class="text-sm" [class.text-indigo-200]="msg.role === 'USER'" [class.text-indigo-400]="msg.role === 'AI'">
+                <mat-icon class="text-sm" [class.text-brand-200]="msg.role === 'USER'" [class.text-brand-400]="msg.role === 'AI'">
                   {{ msg.role === 'USER' ? 'person' : 'smart_toy' }}
                 </mat-icon>
-                <span class="text-xs font-bold" [class.text-indigo-200]="msg.role === 'USER'" [class.text-indigo-400]="msg.role === 'AI'">
+                <span class="text-xs font-bold" [class.text-brand-200]="msg.role === 'USER'" [class.text-brand-400]="msg.role === 'AI'">
                   {{ msg.role === 'USER' ? 'Vous' : 'TrustAI' }}
                 </span>
               </div>
@@ -79,7 +79,7 @@
                   <div class="relative w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0" 
                        [style.background]="'conic-gradient(' + (msg.confidenceScore >= 80 ? '#10b981' : msg.confidenceScore >= 50 ? '#f59e0b' : '#ef4444') + ' ' + msg.confidenceScore + '%, rgba(255,255,255,0.1) 0)'"
                        title="Score de confiance global (Moyenne des affirmations)">
-                    <div class="absolute inset-[2.5px] bg-[#1e1e2d] rounded-full flex items-center justify-center">
+                    <div class="absolute inset-[2.5px] bg-[#1c1a17] rounded-full flex items-center justify-center">
                       <span class="text-[9px] font-bold" [ngClass]="msg.confidenceScore >= 80 ? 'text-emerald-400' : msg.confidenceScore >= 50 ? 'text-amber-400' : 'text-red-400'">
                         {{ msg.confidenceScore }}%
                       </span>
@@ -158,9 +158,9 @@
 
             <!-- Verifying Indicator -->
             @if (msg.role === 'AI' && msg.isVerifying) {
-              <div class="mt-4 flex items-center gap-3 p-3 bg-indigo-900/20 rounded-lg border border-indigo-500/20">
-                <mat-icon class="text-indigo-400 animate-spin">sync</mat-icon>
-                <div class="text-xs text-indigo-200">
+              <div class="mt-4 flex items-center gap-3 p-3 bg-brand-900/20 rounded-lg border border-brand-500/20">
+                <mat-icon class="text-brand-400 animate-spin">sync</mat-icon>
+                <div class="text-xs text-brand-200">
                   Audit et vérification des sources en cours... 
                   <span class="opacity-75">(Analyse vectorielle)</span>
                 </div>
@@ -175,15 +175,15 @@
         <div class="flex">
           <div class="max-w-[80%] rounded-2xl p-4 bg-[rgba(255,255,255,0.08)] text-white/90 border border-white/10">
             <div class="flex items-center gap-3">
-              <mat-icon class="text-indigo-400 animate-pulse">smart_toy</mat-icon>
+              <mat-icon class="text-brand-400 animate-pulse">smart_toy</mat-icon>
               <div class="flex flex-col">
-                <span class="text-xs font-bold text-indigo-400 mb-1">TrustAI</span>
+                <span class="text-xs font-bold text-brand-400 mb-1">TrustAI</span>
                 <span class="text-sm text-white/60 flex items-center gap-2">
                   Génération et vérification des sources en cours
                   <span class="flex gap-1 ml-1">
-                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                    <span class="w-1.5 h-1.5 bg-brand-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                    <span class="w-1.5 h-1.5 bg-brand-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                    <span class="w-1.5 h-1.5 bg-brand-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
                   </span>
                 </span>
               </div>
@@ -198,8 +198,8 @@
           <p class="text-xs text-white/50 font-bold mb-2 uppercase tracking-wider">Sources de la dernière recherche ({{ results.length }})</p>
           <div class="grid grid-cols-1 gap-2">
             @for (chunk of results; track $index) {
-              <div class="bg-white/5 p-3 rounded-lg border border-indigo-500/20 text-sm">
-                <div class="font-bold text-indigo-400 mb-1 flex items-center gap-1 text-xs">
+              <div class="bg-white/5 p-3 rounded-lg border border-brand-500/20 text-sm">
+                <div class="font-bold text-brand-400 mb-1 flex items-center gap-1 text-xs">
                   <mat-icon class="text-[14px] h-[14px] w-[14px]">analytics</mat-icon> Similarité: {{ chunk.score * 100 | number:'1.0-1' }}%
                 </div>
                 <p class="text-white/60 m-0 line-clamp-3">{{ chunk.text }}</p>

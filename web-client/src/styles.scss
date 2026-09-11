@@ -3,14 +3,34 @@
 @tailwind utilities;
 
 @import '@angular/material/prebuilt-themes/pink-bluegrey.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: 'Inter', 'Roboto', "Helvetica Neue", sans-serif;
-  background: #0f0b1e;
+  font-family: 'Plus Jakarta Sans', 'Inter', 'Roboto', "Helvetica Neue", sans-serif;
+  background: #0b0a09;
   color: rgba(255, 255, 255, 0.9);
+}
+
+.font-display {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+.font-mono, code, pre {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(192, 149, 79, 0.7);
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* Fix Tailwind Preflight conflict with Angular Material MDC Outlines */
@@ -42,7 +62,7 @@ body {
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
-  border-color: rgba(99, 102, 241, 0.6) !important;
+  border-color: rgba(192, 149, 79, 0.6) !important;
 }
 
 .mat-mdc-input-element,
@@ -67,12 +87,60 @@ body {
 /* FAB / Buttons */
 .mat-mdc-fab.mat-primary,
 .mat-mdc-mini-fab.mat-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+  background: linear-gradient(135deg, #ab7f3f, #71542a) !important;
+  box-shadow: 0 4px 14px rgba(171, 127, 63, 0.35) !important;
 }
 
 .mat-mdc-fab.mat-primary:hover {
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 8px 24px rgba(171, 127, 63, 0.45) !important;
+}
+
+/* Primary-colored Material controls (icon buttons, tabs, badges) follow the
+   bronze brand accent instead of the pink-bluegrey prebuilt theme default */
+.mat-mdc-icon-button.mat-primary .mat-icon,
+.mat-mdc-icon-button.mat-primary .mdc-button__label,
+.mat-mdc-tab.mat-mdc-tab-disabled { color: inherit; }
+
+.mat-mdc-icon-button.mat-primary {
+  --mdc-icon-button-icon-color: #c0954f !important;
+  color: #c0954f !important;
+}
+
+.mat-mdc-tab .mdc-tab-indicator__content--underline {
+  border-color: #c0954f !important;
+}
+
+.mat-mdc-tab.mdc-tab--active .mdc-tab__text-label,
+.mat-mdc-tab.mdc-tab--active .mat-mdc-tab-ripple ~ .mdc-tab__text-label {
+  color: #c0954f !important;
+}
+
+.mat-badge-primary .mat-badge-content {
+  background: #ab7f3f !important;
+  color: #fff !important;
+}
+
+/* mat-spinner / mat-progress-spinner default to the leftover theme's primary (pink) */
+.mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: #c0954f;
+}
+
+/* "accent" buttons also default to the leftover pink-bluegrey theme */
+.mat-mdc-unelevated-button.mat-accent,
+.mat-mdc-raised-button.mat-accent {
+  --mdc-filled-button-container-color: #ab7f3f;
+  --mdc-filled-button-label-text-color: #ffffff;
+  background-color: #ab7f3f !important;
+  color: #fff !important;
+}
+
+.mat-mdc-outlined-button.mat-accent {
+  color: #c0954f !important;
+  border-color: rgba(192, 149, 79, 0.5) !important;
+}
+
+.mat-mdc-icon-button.mat-accent {
+  color: #c0954f !important;
 }
 
 /* Stroked button */

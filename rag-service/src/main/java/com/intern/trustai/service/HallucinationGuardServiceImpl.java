@@ -1,0 +1,232 @@
+package com.intern.trustai.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.intern.trustai.entity.ChatMessage;
+import com.intern.trustai.entity.HallucinationCheck;
+import com.intern.trustai.repository.ChatMessageRepository;
+import com.intern.trustai.repository.DocumentRepository;
+import com.intern.trustai.repository.HallucinationCheckRepository;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.input.PromptTemplate;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+
+import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
+
+@Service
+public class HallucinationGuardServiceImpl implements HallucinationGuardService {
+
+    private static final Logger log = LoggerFactory.getLogger(HallucinationGuardServiceImpl.class);
+
+    private final ChatLanguageModel chatLanguageModel;
+    private final ObjectMapper objectMapper;
+    private final EmbeddingModel embeddingModel;
+    private final EmbeddingStore<TextSegment> embeddingStore;
+    private final HallucinationCheckRepository checkRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final DocumentRepository documentRepository;
+
+    public HallucinationGuardServiceImpl(ChatLanguageModel chatLanguageModel,
+                                     EmbeddingModel embeddingModel,
+                                     EmbeddingStore<TextSegment> embeddingStore,
+                                     HallucinationCheckRepository checkRepository,
+                                     ChatMessageRepository chatMessageRepository,
+                                     DocumentRepository documentRepository) {
+        this.chatLanguageModel = chatLanguageModel;
+        this.embeddingModel = embeddingModel;
+        this.embeddingStore = embeddingStore;
+        this.checkRepository = checkRepository;
+        this.chatMessageRepository = chatMessageRepository;
+        this.documentRepository = documentRepository;
+        this.objectMapper = new ObjectMapper();
+    }
+
+    @Override
+    public GuardResult verifyClaims(String aiResponse, Long messageId, String tenantId) {
+        String promptString = "You are a strict compliance auditor. Your job is to extract all factual claims from the AI Response.\n" +
+                "You MUST output ONLY a valid JSON object in the exact format below, with no markdown formatting or extra text:\n" +
+                "{\n" +
+                "  \"claims\": [\n" +
+                "    { \"text\": \"claim 1\" },\n" +
+                "    { \"text\": \"claim 2\" }\n" +
+                "  ]\n" +
+                "}\n\n" +
+                "AI Response:\n{{response}}";
+
+        PromptTemplate promptTemplate = PromptTemplate.from(promptString);
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("response", aiResponse);
+
+        String jsonResult = chatLanguageModel.generate(promptTemplate.apply(variables).text());
+
+        // Clean up markdown if LLM adds ```json
+        if (jsonResult.startsWith("```json")) {
+            jsonResult = jsonResult.substring(7);
+        } else if (jsonResult.startsWith("```")) {
+            jsonResult = jsonResult.substring(3);
+        }
+        if (jsonResult.endsWith("```")) {
+            jsonResult = jsonResult.substring(0, jsonResult.length() - 3);
+        }
+        jsonResult = jsonResult.trim();
+
+        GuardResult result = new GuardResult();
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonResult);
+            JsonNode claimsNode = rootNode.get("claims");
+
+            ChatMessage chatMessage = chatMessageRepository.findById(messageId).orElse(null);
+
+            int totalClaims = 0;
+            double sumScores = 0.0;
+
+            ArrayNode claimsArray = objectMapper.createArrayNode();
+
+            if (claimsNode != null && claimsNode.isArray()) {
+                for (JsonNode claimNode : claimsNode) {
+                    totalClaims++;
+                    String text = claimNode.get("text").asText();
+
+                    // Generate embedding for the claim
+                    Embedding claimEmbedding = embeddingModel.embed(text).content();
+
+                    // Search top-3 chunks
+                    EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
+                            .queryEmbedding(claimEmbedding)
+                            .maxResults(3)
+                            .filter(metadataKey("tenant_id").isEqualTo(tenantId))
+                            .build();
+
+                    EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
+
+                    double maxScore = 0.0;
+                    String bestDocIdStr = null;
+                    List<Map<String, Object>> chunksData = new ArrayList<>();
+                    StringBuilder contextBuilder = new StringBuilder();
+
+                    for (var match : searchResult.matches()) {
+                        if (match.score() > maxScore) {
+                            maxScore = match.score();
+                            bestDocIdStr = match.embedded().metadata().getString("document_id");
+                        }
+                        Map<String, Object> chunkInfo = new HashMap<>();
+                        chunkInfo.put("text", match.embedded().text());
+                        chunkInfo.put("score", match.score());
+                        chunksData.add(chunkInfo);
+
+                        contextBuilder.append("- ").append(match.embedded().text()).append("\n");
+                    }
+
+                    // LLM-as-a-Judge Evaluation
+                    String judgePrompt = "You are a strict compliance judge. Determine if the Claim is factually supported by the Context.\n" +
+                            "Context:\n" + contextBuilder.toString() + "\n" +
+                            "Claim: " + text + "\n\n" +
+                            "Output ONLY a valid JSON object in the exact format below, with no markdown or extra text:\n" +
+                            "{\n" +
+                            "  \"status\": \"VÉRIFIÉ\",\n" +
+                            "  \"reasoning\": \"Brief explanation of why\"\n" +
+                            "}\n\n" +
+                            "RULES FOR STATUS:\n" +
+                            "- Use \"VÉRIFIÉ\" if the context fully supports the claim.\n" +
+                            "- Use \"NON VÉRIFIÉ\" if the context contradicts the claim or does not contain the information.\n" +
+                            "- Use \"INCERTAIN\" if it is ambiguous.";
+
+                    String judgeJson = chatLanguageModel.generate(judgePrompt);
+
+                    if (judgeJson.startsWith("```json")) {
+                        judgeJson = judgeJson.substring(7);
+                    } else if (judgeJson.startsWith("```")) {
+                        judgeJson = judgeJson.substring(3);
+                    }
+                    if (judgeJson.endsWith("```")) {
+                        judgeJson = judgeJson.substring(0, judgeJson.length() - 3);
+                    }
+                    judgeJson = judgeJson.trim();
+
+                    String status = "NON VÉRIFIÉ";
+                    boolean isSupported = false;
+                    String reasoning = "";
+
+                    try {
+                        JsonNode judgeNode = objectMapper.readTree(judgeJson);
+                        if (judgeNode.has("status")) {
+                            status = judgeNode.get("status").asText().toUpperCase();
+                            if (!status.equals("VÉRIFIÉ") && !status.equals("INCERTAIN")) {
+                                status = "NON VÉRIFIÉ";
+                            }
+                            isSupported = "VÉRIFIÉ".equals(status);
+                        }
+                        if (judgeNode.has("reasoning")) {
+                            reasoning = judgeNode.get("reasoning").asText();
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to parse judge JSON: {}", judgeJson);
+                    }
+
+                    // Calculate confidence score contribution based on LLM judgement (0 to 1)
+                    if ("VÉRIFIÉ".equals(status)) {
+                        sumScores += 1.0;
+                    } else if ("INCERTAIN".equals(status)) {
+                        sumScores += 0.5;
+                    }
+
+                    String chunksJson = objectMapper.writeValueAsString(chunksData);
+
+                    if (chatMessage != null) {
+                        HallucinationCheck check = new HallucinationCheck();
+                        check.setMessage(chatMessage);
+                        check.setClaimText(text);
+                        check.setStatus(status);
+                        check.setSimilarityScore(maxScore);
+                        check.setSourceChunks(chunksJson);
+                        if (bestDocIdStr != null) {
+                            documentRepository.findById(Long.parseLong(bestDocIdStr)).ifPresent(check::setDocument);
+                        }
+                        checkRepository.save(check);
+                    }
+
+                    ObjectNode newClaimNode = objectMapper.createObjectNode();
+                    newClaimNode.put("text", text);
+                    newClaimNode.put("isSupported", isSupported);
+                    newClaimNode.put("status", status);
+                    newClaimNode.put("score", maxScore);
+                    newClaimNode.put("reasoning", reasoning);
+                    newClaimNode.set("chunks", objectMapper.valueToTree(chunksData));
+
+                    claimsArray.add(newClaimNode);
+                }
+            }
+
+            int confidenceScore = totalClaims == 0 ? 100 : (int) Math.round((sumScores / totalClaims) * 100);
+
+            ObjectNode finalAnalysis = objectMapper.createObjectNode();
+            finalAnalysis.put("confidenceScore", confidenceScore);
+            finalAnalysis.set("claims", claimsArray);
+
+            result.setConfidenceScore(confidenceScore);
+            result.setClaimAnalysis(objectMapper.writeValueAsString(finalAnalysis));
+
+        } catch (Exception e) {
+            log.error("Failed to compute hallucination guard result for message {}", messageId, e);
+            result.setConfidenceScore(0);
+            result.setClaimAnalysis("{\"confidenceScore\":0, \"claims\":[], \"error\":\"Failed to parse guard response\"}");
+        }
+
+        return result;
+    }
+}

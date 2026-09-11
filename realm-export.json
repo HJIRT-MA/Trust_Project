@@ -1,6 +1,7 @@
 {
   "realm": "trustai-realm",
   "enabled": true,
+  "loginTheme": "trustai",
   "clients": [
     {
       "clientId": "trustai-client",
@@ -35,6 +36,7 @@
     {
       "username": "admin",
       "enabled": true,
+      "email": "admin@trustai.local",
       "emailVerified": true,
       "firstName": "Admin",
       "lastName": "User",
@@ -52,6 +54,7 @@
     {
       "username": "user",
       "enabled": true,
+      "email": "user@trustai.local",
       "emailVerified": true,
       "firstName": "Standard",
       "lastName": "User",
@@ -64,6 +67,24 @@
       ],
       "realmRoles": [
         "viewer"
+      ]
+    },
+    {
+      "username": "analyst",
+      "enabled": true,
+      "email": "analyst@trustai.local",
+      "emailVerified": true,
+      "firstName": "Analyst",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "analyst",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "analyst"
       ]
     }
   ]

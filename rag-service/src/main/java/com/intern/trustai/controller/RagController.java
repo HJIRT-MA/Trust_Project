@@ -1,24 +1,22 @@
 package com.intern.trustai.controller;
 
 
-import com.intern.trustai.entity.Document;
-import com.intern.trustai.repository.DocumentRepository;
 import com.intern.trustai.dto.ChunkResponse;
+import com.intern.trustai.dto.DocumentDTO;
 import com.intern.trustai.service.RagPipelineService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.intern.trustai.entity.Conversation;
-import com.intern.trustai.entity.ChatMessage;
-import com.intern.trustai.repository.ConversationRepository;
-import com.intern.trustai.repository.ChatMessageRepository;
+import java.util.stream.Collectors;
+import com.intern.trustai.dto.ChatMessageDTO;
+import com.intern.trustai.dto.ConversationDTO;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpHeaders;
@@ -27,8 +25,9 @@ import com.intern.trustai.dto.DashboardStatsDTO;
 
 @RestController
 @RequestMapping("/api/rag")
-@CrossOrigin(origins = "http://localhost:4200")
 public class RagController {
+
+    private static final Logger log = LoggerFactory.getLogger(RagController.class);
 
     private final RagPipelineService ragService;
     private final ResourcePatternResolver resourcePatternResolver;
@@ -40,8 +39,11 @@ public class RagController {
 
     @GetMapping("/documents")
     @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
-    public ResponseEntity<List<Document>> getAllDocuments() {
-        return ResponseEntity.ok(ragService.getAllDocuments());
+    public ResponseEntity<List<DocumentDTO>> getAllDocuments() {
+        List<DocumentDTO> documents = ragService.getAllDocuments().stream()
+                .map(DocumentDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(documents);
     }
 
     @PostMapping("/chat")
@@ -72,8 +74,8 @@ public class RagController {
             ragService.ingestFile(file);
             return ResponseEntity.ok("Document ingéré et vectorisé avec succès.");
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Erreur lors de l'ingestion : " + e.getMessage());
+            log.error("Failed to ingest document {}", file.getOriginalFilename(), e);
+            return ResponseEntity.internalServerError().body("Erreur lors de l'ingestion du document.");
         }
     }
 
@@ -92,8 +94,8 @@ public class RagController {
             ragService.deleteDocument(id);
             return ResponseEntity.ok("Document supprimé avec succès.");
         }catch (Exception e){
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Erreur lors de le suppression : " + e.getMessage());
+            log.error("Failed to delete document {}", id, e);
+            return ResponseEntity.internalServerError().body("Erreur lors de la suppression du document.");
         }
    }
 
@@ -110,26 +112,25 @@ public class RagController {
 
     @GetMapping("/conversations")
     @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
-    public ResponseEntity<List<Conversation>> getConversations() {
+    public ResponseEntity<List<ConversationDTO>> getConversations() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
-        return ResponseEntity.ok(ragService.getUserConversations(userId));
+        List<ConversationDTO> conversations = ragService.getUserConversations(userId).stream()
+                .map(ConversationDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(conversations);
     }
 
 
     @GetMapping("/conversations/{id}")
     @PreAuthorize("hasAnyRole('viewer', 'analyst', 'admin')")
-    public ResponseEntity<List<ChatMessage>> getConversationMessages(@PathVariable("id") Long id) {
+    public ResponseEntity<List<ChatMessageDTO>> getConversationMessages(@PathVariable("id") Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
-        try {
-            return ResponseEntity.ok(ragService.getConversationMessages(id, userId));
-        } catch (RuntimeException e) {
-            if (e.getMessage().equals("Unauthorized to access this conversation")) {
-                return ResponseEntity.status(403).build();
-            }
-            throw e;
-        }
+        List<ChatMessageDTO> messages = ragService.getConversationMessages(id, userId).stream()
+                .map(ChatMessageDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(messages);
     }
 
     @DeleteMapping("/conversations/{id}")
@@ -137,15 +138,8 @@ public class RagController {
     public ResponseEntity<String> deleteConversation(@PathVariable("id") Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
-        try {
-            ragService.deleteConversation(id, userId);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            if (e.getMessage().equals("Unauthorized to access this conversation")) {
-                return ResponseEntity.status(403).build();
-            }
-            throw e;
-        }
+        ragService.deleteConversation(id, userId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/conversations/{id}/pdf")
@@ -165,7 +159,7 @@ public class RagController {
                     .body(pdfBytes);
 
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("Failed to generate PDF for conversation {}", id, e);
             return ResponseEntity.internalServerError().build();
         }
     }

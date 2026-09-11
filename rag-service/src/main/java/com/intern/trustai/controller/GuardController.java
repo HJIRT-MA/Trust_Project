@@ -1,19 +1,20 @@
 package com.intern.trustai.controller;
 
 import com.intern.trustai.service.PdfReportService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.intern.trustai.repository.ReportSignatureRepository;
 import com.intern.trustai.dto.ReportHistoryDTO;
 import java.util.List;
-import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/guard")
-@CrossOrigin(origins = "http://localhost:4200")
 public class GuardController {
+
+    private static final Logger log = LoggerFactory.getLogger(GuardController.class);
 
     private final PdfReportService pdfReportService;
     private final com.intern.trustai.service.GuardService guardService;
@@ -40,7 +41,7 @@ public class GuardController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to generate guard report PDF for message {}", id, e);
             return ResponseEntity.internalServerError().build();
         }
     }

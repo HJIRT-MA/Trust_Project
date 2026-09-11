@@ -4,9 +4,10 @@ import com.intern.trustai.entity.BlockchainProof;
 import com.intern.trustai.service.BlockchainProofService;
 import com.intern.trustai.service.BlockchainService;
 import com.intern.trustai.service.KafkaProducerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,9 +19,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/proofs")
-@CrossOrigin(origins = "http://localhost:4200")
 @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
 public class BlockchainProofController {
+
+    private static final Logger log = LoggerFactory.getLogger(BlockchainProofController.class);
 
     private final BlockchainProofService proofService;
     private final BlockchainService blockchainService;
@@ -45,9 +47,8 @@ public class BlockchainProofController {
         try {
             return ResponseEntity.ok(proofService.getFilteredProofs(type, status, userId));
         } catch (Exception e) {
-            java.io.StringWriter sw = new java.io.StringWriter();
-            e.printStackTrace(new java.io.PrintWriter(sw));
-            return ResponseEntity.status(500).body("Error: " + e.getMessage() + "\n" + sw.toString());
+            log.error("Failed to fetch blockchain proofs (type={}, status={}, userId={})", type, status, userId, e);
+            return ResponseEntity.internalServerError().body("Impossible de récupérer les preuves blockchain.");
         }
     }
 
@@ -85,7 +86,7 @@ public class BlockchainProofController {
             headers.setContentDispositionFormData("filename", "Rapport_Conformite_AI_Act.pdf");
             return ResponseEntity.ok().headers(headers).body(pdf);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to generate AI Act compliance report", e);
             return ResponseEntity.internalServerError().build();
         }
     }

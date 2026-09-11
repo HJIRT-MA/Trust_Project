@@ -1,7 +1,7 @@
 <div class="h-full flex flex-col p-6 space-y-6 max-w-5xl mx-auto w-full">
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+      <h1 class="font-display text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-brand-300 to-brand-500">
         Smart Contract Auditor
       </h1>
       <p class="text-gray-400 mt-2 text-sm">
@@ -19,10 +19,10 @@
           (onFileDrop)="dropped($event)" 
           (onFileOver)="fileOver($event)" 
           (onFileLeave)="fileLeave($event)"
-          contentClassName="h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 rounded-xl border-2 border-dashed border-indigo-500/50 transition-colors text-indigo-200">
+          contentClassName="h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 rounded-xl border-2 border-dashed border-brand-500/50 transition-colors text-brand-200">
           <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
             <div class="flex flex-col items-center gap-2" (click)="openFileSelector()">
-              <mat-icon class="scale-150 text-indigo-400 mb-2">cloud_upload</mat-icon>
+              <mat-icon class="scale-150 text-brand-400 mb-2">cloud_upload</mat-icon>
               <span class="font-medium text-lg">Glissez-déposez un fichier .sol ici</span>
               <span class="text-sm text-gray-400">ou cliquez pour parcourir</span>
             </div>
@@ -87,7 +87,7 @@
           <div class="flex items-center justify-between mb-4">
              <h2 class="text-2xl font-semibold text-white flex items-center gap-2">
                <mat-icon class="text-green-400">check_circle</mat-icon>
-               Rapport: <span class="text-indigo-400">{{ parsedStructure.contractName || 'Contrat Inconnu' }}</span>
+               Rapport: <span class="text-brand-400">{{ parsedStructure.contractName || 'Contrat Inconnu' }}</span>
              </h2>
              <button mat-flat-button color="accent" (click)="downloadPdf()">
                <mat-icon>picture_as_pdf</mat-icon> Télécharger le Rapport PDF
@@ -134,7 +134,7 @@
                 <!-- SWC References -->
                 <div *ngIf="finding.swcId" class="flex items-center gap-2">
                    <mat-chip-set>
-                     <mat-chip class="!bg-indigo-500/20 !text-indigo-300 font-bold border border-indigo-500/50">
+                     <mat-chip class="!bg-brand-500/20 !text-brand-300 font-bold border border-brand-500/50">
                         {{ finding.swcId }}: {{ finding.swcTitle }}
                      </mat-chip>
                    </mat-chip-set>
@@ -144,8 +144,8 @@
                   <strong>Description originale :</strong> {{ finding.description }}
                 </div>
 
-                <div *ngIf="finding.enrichedExplanation" class="text-gray-300 text-sm leading-relaxed p-3 bg-indigo-500/10 rounded border border-indigo-500/30">
-                  <strong class="text-indigo-300">Enrichissement IA (RAG) :</strong> {{ finding.enrichedExplanation }}
+                <div *ngIf="finding.enrichedExplanation" class="text-gray-300 text-sm leading-relaxed p-3 bg-brand-500/10 rounded border border-brand-500/30">
+                  <strong class="text-brand-300">Enrichissement IA (RAG) :</strong> {{ finding.enrichedExplanation }}
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

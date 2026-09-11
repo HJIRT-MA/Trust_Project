@@ -14,16 +14,15 @@ import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.Duration;
 
 @Configuration
 @EnableScheduling
+@EnableAsync
 public class RagConfig {
-
-    @Value("${openai.api.key}")
-    private String openAiApiKey;
 
     @Value("${spring.datasource.url}")
     private String dbUrl;

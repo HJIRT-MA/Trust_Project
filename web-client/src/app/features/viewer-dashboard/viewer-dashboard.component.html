@@ -1,7 +1,7 @@
 <div class="p-8 max-w-7xl mx-auto text-white">
   <div class="mb-8 flex justify-between items-center">
     <div>
-      <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+      <h1 class="font-display text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-brand-300 to-brand-500">
         Viewer Dashboard
       </h1>
       <p class="text-gray-400">Métriques de fiabilité et d'intégrité on-chain (Lecture seule)</p>
@@ -12,17 +12,17 @@
   </div>
 
   <div *ngIf="loading" class="flex justify-center my-12">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-500"></div>
   </div>
 
-  <div *ngIf="!loading && stats" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    
+  <div *ngIf="!loading && stats" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
     <!-- Total Proofs -->
     <mat-card class="!bg-white/5 border border-white/10 !shadow-lg backdrop-blur-sm">
       <mat-card-content class="p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-gray-400 text-sm uppercase tracking-wider">Total Preuves</h3>
-          <mat-icon class="text-indigo-400 bg-indigo-400/20 p-2 rounded-lg !w-10 !h-10 text-center flex items-center justify-center">token</mat-icon>
+          <mat-icon class="text-brand-400 bg-brand-400/20 p-2 rounded-lg !w-10 !h-10 text-center flex items-center justify-center">token</mat-icon>
         </div>
         <div class="text-4xl font-bold text-white">{{stats.total}}</div>
         <div class="text-xs text-gray-500 mt-2">Événements enregistrés</div>
@@ -40,18 +40,6 @@
         <div class="text-xs text-green-500 mt-2 flex items-center gap-1">
           <mat-icon class="scale-75">arrow_upward</mat-icon> {{stats.confirmed}} confirmés
         </div>
-      </mat-card-content>
-    </mat-card>
-    
-    <!-- Reliability Index -->
-    <mat-card class="!bg-white/5 border border-white/10 !shadow-lg backdrop-blur-sm">
-      <mat-card-content class="p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-gray-400 text-sm uppercase tracking-wider">Indice Fiabilité</h3>
-          <mat-icon class="text-blue-400 bg-blue-400/20 p-2 rounded-lg !w-10 !h-10 text-center flex items-center justify-center">security</mat-icon>
-        </div>
-        <div class="text-4xl font-bold text-white">98%</div>
-        <div class="text-xs text-gray-500 mt-2">Simulé pour l'affichage</div>
       </mat-card-content>
     </mat-card>
 
@@ -83,7 +71,7 @@
       <mat-card-content class="p-0 mt-4 overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-sm uppercase tracking-wider">
+            <tr class="bg-white/5 border-b border-white/10 text-gray-400 text-sm uppercase tracking-wider">
               <th class="p-4 font-medium">Contrat (ID)</th>
               <th class="p-4 font-medium">Statut</th>
               <th class="p-4 font-medium">Hash Tx</th>
@@ -91,7 +79,7 @@
             </tr>
           </thead>
           <tbody class="text-sm">
-            <tr *ngFor="let audit of stats.recentAudits" class="border-b border-gray-700/50 hover:bg-white/5 transition-colors">
+            <tr *ngFor="let audit of stats.recentAudits" class="border-b border-white/10 hover:bg-white/5 transition-colors">
               <td class="p-4 font-bold">{{audit.eventId}}</td>
               <td class="p-4">
                 <span class="px-2 py-1 rounded text-xs font-bold"
@@ -103,7 +91,7 @@
                 </span>
               </td>
               <td class="p-4 font-mono text-gray-400">
-                <a *ngIf="audit.txHash && audit.txHash !== 'skipped'" [href]="'https://amoy.polygonscan.com/tx/' + audit.txHash" target="_blank" class="text-indigo-400 hover:underline">
+                <a *ngIf="audit.txHash && audit.txHash !== 'skipped'" [href]="'https://amoy.polygonscan.com/tx/' + audit.txHash" target="_blank" class="text-brand-400 hover:underline">
                   {{shortenHash(audit.txHash)}}
                 </a>
                 <span *ngIf="audit.txHash === 'skipped'">Non émis</span>

@@ -70,14 +70,14 @@
           <circle cx="24" cy="24" r="3" fill="white" opacity="0.9"/>
           <defs>
             <linearGradient id="logo-grad" x1="0" y1="0" x2="48" y2="48">
-              <stop stop-color="#6366f1"/>
-              <stop offset="1" stop-color="#8b5cf6"/>
+              <stop stop-color="#ab7f3f"/>
+              <stop offset="1" stop-color="#71542a"/>
             </linearGradient>
           </defs>
         </svg>
       </div>
       <h1 class="auth-title">TrustAI Chain</h1>
-      <p class="auth-subtitle">Secure & Intelligent Document Intelligence</p>
+      <p class="auth-subtitle">Verified AI audits, anchored on-chain</p>
     </div>
 
     <!-- Divider -->

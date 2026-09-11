@@ -1,37 +1,51 @@
 package com.intern.trustai.controller;
 
+import com.intern.trustai.dto.AuditFindingDTO;
 import com.intern.trustai.dto.ContractStructureDTO;
+import com.intern.trustai.dto.SmartContractDTO;
+import com.intern.trustai.security.TenantContext;
+import com.intern.trustai.service.AuditOrchestrationService;
 import com.intern.trustai.service.AuditService;
+import com.intern.trustai.service.AuditStreamRegistry;
+import com.intern.trustai.service.SecurityAuditService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.intern.trustai.entity.AuditFinding;
-import com.intern.trustai.entity.SmartContract;
-import com.intern.trustai.repository.AuditFindingRepository;
-import com.intern.trustai.repository.SmartContractRepository;
 import com.intern.trustai.service.SecurityPdfReportService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/audit")
-@CrossOrigin(origins = "http://localhost:4200")
 public class AuditController {
 
-    private final AuditService auditService;
-    private final com.intern.trustai.service.SecurityAuditService securityAuditService;
-    private final SecurityPdfReportService pdfReportService;
-    private final java.util.Map<Long, org.springframework.web.servlet.mvc.method.annotation.SseEmitter> emitters = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(AuditController.class);
 
-    public AuditController(AuditService auditService, 
-                           com.intern.trustai.service.SecurityAuditService securityAuditService,
-                           SecurityPdfReportService pdfReportService) {
+    private final AuditService auditService;
+    private final SecurityAuditService securityAuditService;
+    private final SecurityPdfReportService pdfReportService;
+    private final AuditStreamRegistry streamRegistry;
+    private final AuditOrchestrationService auditOrchestrationService;
+
+    public AuditController(AuditService auditService,
+                           SecurityAuditService securityAuditService,
+                           SecurityPdfReportService pdfReportService,
+                           AuditStreamRegistry streamRegistry,
+                           AuditOrchestrationService auditOrchestrationService) {
         this.auditService = auditService;
         this.securityAuditService = securityAuditService;
         this.pdfReportService = pdfReportService;
+        this.streamRegistry = streamRegistry;
+        this.auditOrchestrationService = auditOrchestrationService;
     }
 
     @PostMapping("/upload")
@@ -44,72 +58,49 @@ public class AuditController {
             ContractStructureDTO result = auditService.uploadAndParseContract(file);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to upload/parse contract", e);
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    @GetMapping(value = "/stream/{contractId}", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
-    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter streamAudit(@PathVariable("contractId") Long contractId) {
-        org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(600000L); // 10 minutes
-        emitters.put(contractId, emitter);
+    @GetMapping(value = "/stream/{contractId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("hasAnyRole('admin', 'analyst')")
+    public SseEmitter streamAudit(@PathVariable("contractId") Long contractId) {
+        SseEmitter emitter = streamRegistry.register(contractId, 600_000L); // 10 minutes
         try {
             emitter.send("connected");
-        } catch (Exception e) {}
-        emitter.onCompletion(() -> emitters.remove(contractId));
-        emitter.onTimeout(() -> emitters.remove(contractId));
+        } catch (Exception e) {
+            log.warn("Could not send initial SSE event for contract {}", contractId, e);
+        }
         return emitter;
     }
 
     @PostMapping("/{contractId}/analyze")
     @PreAuthorize("hasAnyRole('admin', 'analyst')")
     public ResponseEntity<String> startAnalysis(@PathVariable("contractId") Long contractId, Authentication authentication) {
-        String currentTenant = com.intern.trustai.security.TenantContext.getCurrentTenant();
+        String currentTenant = TenantContext.getCurrentTenant();
         String auditor = authentication != null ? authentication.getName() : "Unknown";
-        
-        try {
-            new Thread(() -> {
-                com.intern.trustai.security.TenantContext.setCurrentTenant(currentTenant);
-                try {
-                    org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = null;
-                    for (int i = 0; i < 10; i++) {
-                        emitter = emitters.get(contractId);
-                        if (emitter != null) break;
-                        Thread.sleep(500);
-                    }
-                    if (emitter != null) emitter.send("Starting security audit...");
-                    
-                    java.util.List<com.intern.trustai.entity.AuditFinding> findings = securityAuditService.runSecurityAudit(contractId, emitter, auditor);
-                    
-                    if (emitter != null) {
-                        emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("complete").data(findings));
-                        emitter.complete();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = emitters.get(contractId);
-                    if (emitter != null) emitter.completeWithError(e);
-                } finally {
-                    com.intern.trustai.security.TenantContext.clear();
-                }
-            }).start();
-            return ResponseEntity.accepted().body("{\"status\": \"started\"}");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
+
+        auditOrchestrationService.runAnalysisAsync(contractId, currentTenant, auditor);
+        return ResponseEntity.accepted().body("{\"status\": \"started\"}");
     }
 
     @GetMapping("/history")
     @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
-    public ResponseEntity<java.util.List<SmartContract>> getHistory() {
-        return ResponseEntity.ok(auditService.getAllContracts());
+    public ResponseEntity<List<SmartContractDTO>> getHistory() {
+        List<SmartContractDTO> history = auditService.getAllContracts().stream()
+                .map(SmartContractDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(history);
     }
 
     @GetMapping("/{contractId}/findings")
     @PreAuthorize("hasAnyRole('admin', 'analyst', 'viewer')")
-    public ResponseEntity<java.util.List<AuditFinding>> getFindings(@PathVariable("contractId") Long contractId) {
-        return ResponseEntity.ok(auditService.getFindingsByContractId(contractId));
+    public ResponseEntity<List<AuditFindingDTO>> getFindings(@PathVariable("contractId") Long contractId) {
+        List<AuditFindingDTO> findings = auditService.getFindingsByContractId(contractId).stream()
+                .map(AuditFindingDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(findings);
     }
 
     @GetMapping("/{contractId}/report/pdf")
@@ -122,7 +113,7 @@ public class AuditController {
             headers.setContentDispositionFormData("filename", "Security_Audit_Report_" + contractId + ".pdf");
             return ResponseEntity.ok().headers(headers).body(pdf);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to generate PDF report for contract {}", contractId, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -134,9 +125,5 @@ public class AuditController {
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(Throwable.class)
-    public ResponseEntity<String> handleThrowable(Throwable ex) {
-        ex.printStackTrace();
-        return ResponseEntity.internalServerError().body("SERVER CRASH: " + ex.getClass().getName() + " - " + ex.getMessage());
-    }
+    // Access-denied and uncaught-exception handling now live in GlobalExceptionHandler.
 }

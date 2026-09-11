@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ChunkRepository extends JpaRepository<Chunk, Long> {
     List<Chunk> findByDocumentId(Long documentId);
+    void deleteByDocumentId(Long documentId);
 }

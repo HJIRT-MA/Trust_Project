@@ -28,7 +28,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.intern.trustai.repository.LangchainEmbeddingStoreRepository;
 import com.intern.trustai.entity.Conversation;
 import com.intern.trustai.entity.ChatMessage;
 import com.intern.trustai.repository.ConversationRepository;
@@ -58,7 +58,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
     private final ChunkRepository chunkRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final Tika tika;
-    private final JdbcTemplate jdbcTemplate;
+    private final LangchainEmbeddingStoreRepository langchainEmbeddingStoreRepository;
     private final ChatLanguageModel chatLanguageModel;
     private final StreamingChatLanguageModel streamingChatLanguageModel;
     private final ConversationRepository conversationRepository;
@@ -68,7 +68,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
     public RagPipelineServiceImp(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore,
                                  DocumentRepository documentRepository, ChunkRepository chunkRepository,
-                                 SimpMessagingTemplate messagingTemplate, JdbcTemplate jdbcTemplate,
+                                 SimpMessagingTemplate messagingTemplate, LangchainEmbeddingStoreRepository langchainEmbeddingStoreRepository,
                                  ChatLanguageModel chatLanguageModel, StreamingChatLanguageModel streamingChatLanguageModel, ConversationRepository conversationRepository,
                                  ChatMessageRepository chatMessageRepository, HallucinationGuardService guardService,
                                  KafkaProducerService kafkaProducerService) {
@@ -77,7 +77,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.messagingTemplate = messagingTemplate;
-        this.jdbcTemplate = jdbcTemplate;
+        this.langchainEmbeddingStoreRepository = langchainEmbeddingStoreRepository;
         this.chatLanguageModel = chatLanguageModel;
         this.streamingChatLanguageModel = streamingChatLanguageModel;
         this.conversationRepository = conversationRepository;
@@ -152,9 +152,8 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteDocument(Long documentId) {
-        jdbcTemplate.update("delete from langchain_chunks " +
-                "where text in ( select content from chunks where document_id = ?)", documentId);
-        jdbcTemplate.update("delete from chunks where document_id = ?", documentId);
+        langchainEmbeddingStoreRepository.deleteEmbeddingsForDocument(documentId);
+        chunkRepository.deleteByDocumentId(documentId);
         documentRepository.deleteById(documentId);
     }
 
@@ -185,9 +184,9 @@ public class RagPipelineServiceImp implements RagPipelineService {
             conversation = conversationRepository.save(conversation);
         }else {
             conversation = conversationRepository.findById(conversationId)
-                    .orElseThrow(() -> new RuntimeException("conversation not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Conversation introuvable"));
             if(!conversation.getUserId().equals(userId)) {
-                throw new RuntimeException("Unauthorized to access this conversation");
+                throw new org.springframework.security.access.AccessDeniedException("Unauthorized to access this conversation");
             }
         }
         ChatMessage userMessage = new ChatMessage();
@@ -268,7 +267,7 @@ public class RagPipelineServiceImp implements RagPipelineService {
                 } catch (Exception e) {}
 
                 // Verify claims (Hallucination Guard) using pgvector
-                HallucinationGuardService.GuardResult guardResult = guardService.verifyClaims(aiResponse, aiMessage.getId(), currentTenant);
+                GuardResult guardResult = guardService.verifyClaims(aiResponse, aiMessage.getId(), currentTenant);
 
                 // Update AI message with results
                 aiMessage.setConfidenceScore(guardResult.getConfidenceScore());
@@ -322,9 +321,9 @@ public class RagPipelineServiceImp implements RagPipelineService {
 
     public byte[] generatePdfForConversation(Long conversationId, String userId) {
         Conversation conversation= conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new RuntimeException("conversation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation introuvable"));
         if(!conversation.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized to access this conversation");
+            throw new org.springframework.security.access.AccessDeniedException("Unauthorized to access this conversation");
         }
         List<ChatMessage> messages = chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
 
@@ -406,9 +405,9 @@ public class RagPipelineServiceImp implements RagPipelineService {
     @Override
     public List<ChatMessage> getConversationMessages(Long conversationId, String userId) {
         Conversation conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation introuvable"));
         if (!conversation.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized to access this conversation");
+            throw new org.springframework.security.access.AccessDeniedException("Unauthorized to access this conversation");
         }
         return chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
     }
@@ -417,9 +416,9 @@ public class RagPipelineServiceImp implements RagPipelineService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteConversation(Long conversationId, String userId) {
         Conversation conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation introuvable"));
         if (!conversation.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized to access this conversation");
+            throw new org.springframework.security.access.AccessDeniedException("Unauthorized to access this conversation");
         }
         chatMessageRepository.deleteByConversationId(conversationId);
         conversationRepository.delete(conversation);

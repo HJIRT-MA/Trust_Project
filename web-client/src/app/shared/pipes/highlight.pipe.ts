@@ -22,7 +22,7 @@ export class HighlightPipe implements PipeTransform {
     }
 
     const pattern = new RegExp(`(${words.join('|')})`, 'gi');
-    return text.replace(pattern, match => `<span class="bg-indigo-500/40 text-white px-0.5 rounded">${match}</span>`);
+    return text.replace(pattern, match => `<span class="bg-brand-500/40 text-white px-0.5 rounded">${match}</span>`);
   }
 
 }

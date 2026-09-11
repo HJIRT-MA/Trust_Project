@@ -1,16 +1,12 @@
 <div class="max-w-7xl mx-auto">
 
-  <div class="flex justify-between items-center mb-8">
-    <h2 class="text-2xl font-bold text-white/90">Gestion Documentaire (RAG)</h2>
-  </div>
-
   <div class="mb-8 bg-[rgba(255,255,255,0.05)] p-6 rounded-2xl border border-white/10 text-center">
     <ngx-file-drop dropZoneLabel="Glissez-déposez vos fichiers ici" (onFileDrop)="dropped($event)">
       <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
         <div class="flex flex-col items-center justify-center gap-3 p-10">
           <i class="ti ti-upload text-4xl"></i>
           <span class="font-medium">Glissez-déposez vos fichiers PDF ou Word ici</span>
-          <button type="button" (click)="openFileSelector()" class="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+          <button type="button" (click)="openFileSelector()" class="mt-2 bg-brand-600 hover:bg-brand-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
             Ou parcourez vos fichiers
           </button>
         </div>
@@ -21,13 +17,13 @@
   @if (isUploading) {
     <div class="mb-8 bg-[rgba(255,255,255,0.07)] p-6 rounded-2xl border border-white/10">
       <div class="flex justify-between mb-2">
-        <span class="text-sm font-medium text-indigo-400 flex items-center gap-2">
+        <span class="text-sm font-medium text-brand-400 flex items-center gap-2">
           <i class="ti ti-loader animate-spin"></i> {{ uploadMessage || 'Ingestion et vectorisation en cours...' }}
         </span>
-        <span class="text-sm font-bold text-indigo-400">{{ uploadProgress }}%</span>
+        <span class="text-sm font-bold text-brand-400">{{ uploadProgress }}%</span>
       </div>
       <div class="w-full bg-white/10 rounded-full h-3">
-        <div class="bg-indigo-500 h-3 rounded-full transition-all duration-300 ease-out"
+        <div class="bg-brand-500 h-3 rounded-full transition-all duration-300 ease-out"
              [style.width.%]="uploadProgress">
         </div>
       </div>
@@ -50,7 +46,7 @@
           <tr class="bg-transparent border-b border-white/10 hover:bg-white/5 transition-colors">
             <td class="px-6 py-4 font-medium text-white/90 flex items-center gap-3">
               <i class="text-xl text-red-500 ti ti-file-type-pdf" *ngIf="doc.contentType.includes('pdf')"></i>
-              <i class="text-xl text-indigo-400 ti ti-file-type-doc" *ngIf="doc.contentType.includes('word')"></i>
+              <i class="text-xl text-brand-400 ti ti-file-type-doc" *ngIf="doc.contentType.includes('word')"></i>
               {{ doc.filename }}
             </td>
             <td class="px-6 py-4 text-white/70">{{ doc.contentType.split('/')[1] | uppercase }}</td>

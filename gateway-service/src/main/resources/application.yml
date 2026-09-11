@@ -14,7 +14,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:4200"
+            allowedOrigins: "${CORS_ALLOWED_ORIGINS:http://localhost:4200}"
             allowedMethods:
               - GET
               - POST
@@ -24,11 +24,20 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
       routes:
-        # Route d'exemple pour tester le fonctionnement du Gateway vers un service externe (ex: HTTPBin)
-        - id: test_route
-          uri: https://httpbin.org
+        # Toutes les API REST/SSE exposées par rag-service (RagController, GuardController,
+        # AuditController, BlockchainProofController) passent par le point d'entrée unique.
+        - id: rag-service-api
+          uri: http://localhost:8082
           predicates:
-            - Path=/get
+            - Path=/api/**
+        # Canal WebSocket/STOMP (chat en streaming). Route séparée car le schéma d'URI
+        # change (ws:// au lieu de http://) ; l'upgrade doit rester public au niveau HTTP
+        # (voir gateway SecurityConfig), l'authentification réelle se fait via le frame
+        # STOMP CONNECT envoyé par le client une fois la socket établie.
+        - id: rag-service-ws
+          uri: ws://localhost:8082
+          predicates:
+            - Path=/ws/**
 
 management:
   endpoints:

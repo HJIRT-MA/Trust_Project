@@ -53,7 +53,7 @@ export class DocumentManagerComponent implements OnInit, OnDestroy {
   }
 
   fetchDocuments() {
-    this.http.get<DocumentMeta[]>('http://localhost:8082/api/rag/documents').subscribe(docs => {
+    this.http.get<DocumentMeta[]>('http://localhost:8080/api/rag/documents').subscribe(docs => {
       // Map to the frontend interface if needed, or just assign
       this.documents = docs.map(d => ({
         ...d,
@@ -92,7 +92,7 @@ export class DocumentManagerComponent implements OnInit, OnDestroy {
     const formData = new FormData();
     formData.append('file', file);
 
-    this.http.post('http://localhost:8082/api/rag/documents', formData, { responseType: 'text' })
+    this.http.post('http://localhost:8080/api/rag/documents', formData, { responseType: 'text' })
       .subscribe({
         next: () => {
           // Progress is handled by WS
@@ -107,7 +107,7 @@ export class DocumentManagerComponent implements OnInit, OnDestroy {
 
   deleteDocument(id:number){
     if(confirm('Voulez-vous vraiment supprimer ce document ? Cette action est irréversible.'))
-      this.http.delete(`http://localhost:8082/api/rag/documents/${id}`, {responseType: 'text'})
+      this.http.delete(`http://localhost:8080/api/rag/documents/${id}`, {responseType: 'text'})
         .subscribe({
           next: ()=>{
             this.fetchDocuments();

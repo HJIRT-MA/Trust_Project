@@ -6,9 +6,9 @@ services:
     image: pgvector/pgvector:0.7.0-pg16
     container_name: trustai-postgres
     environment:
-      POSTGRES_USER: trustai_user
-      POSTGRES_PASSWORD: trustai_password
-      POSTGRES_DB: trustaidb
+      POSTGRES_USER: ${POSTGRES_USER:-trustai_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trustai_password}
+      POSTGRES_DB: ${POSTGRES_DB:-trustaidb}
     ports:
       - "5432:5432"
     volumes:
@@ -47,12 +47,12 @@ services:
     container_name: trustai-keycloak
     command: start-dev --import-realm
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/trustaidb
-      KC_DB_USERNAME: trustai_user
-      KC_DB_PASSWORD: trustai_password
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-trustaidb}
+      KC_DB_USERNAME: ${POSTGRES_USER:-trustai_user}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-trustai_password}
     depends_on:
       - postgres
     ports:

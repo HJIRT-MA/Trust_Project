@@ -17,7 +17,8 @@ export class WebsocketService {
     if (isPlatformBrowser(this.platformId) && this.keycloak.isLoggedIn()) {
       this.keycloak.getToken().then(token => {
         this.rxStomp.configure({
-          brokerURL: 'ws://localhost:8082/ws',
+          // Passe par le gateway-service (route WS dédiée, voir gateway-service/application.yml)
+          brokerURL: 'ws://localhost:8080/ws',
           connectHeaders: {
             Authorization: `Bearer ${token}`
           },

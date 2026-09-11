@@ -49,20 +49,26 @@ export class ViewerDashboardComponent implements OnInit {
     });
   }
 
+  // Fixed per event type (not positional) so a slice keeps its color regardless of
+  // the backend's map iteration order.
+  private static readonly EVENT_TYPE_COLORS: Record<string, string> = {
+    'audit-results': 'rgba(192, 149, 79, 0.75)',       // brand
+    'rag-interactions': 'rgba(56, 189, 248, 0.75)',    // sky
+    'hallucination-checks': 'rgba(248, 113, 113, 0.75)' // red
+  };
+  private static readonly DEFAULT_SLICE_COLOR = 'rgba(100, 116, 139, 0.75)'; // slate
+
   updateChart(): void {
     if (this.stats && this.stats.byType) {
-      const labels = Object.keys(this.stats.byType).map(k => k.replace('-', ' '));
+      const keys = Object.keys(this.stats.byType);
+      const labels = keys.map(k => k.replace('-', ' '));
       const data = Object.values(this.stats.byType) as number[];
-      
+
       this.pieChartData = {
         labels: labels,
         datasets: [{
           data: data,
-          backgroundColor: [
-            'rgba(99, 102, 241, 0.7)',  // indigo
-            'rgba(59, 130, 246, 0.7)',  // blue
-            'rgba(239, 68, 68, 0.7)',   // red
-          ],
+          backgroundColor: keys.map(k => ViewerDashboardComponent.EVENT_TYPE_COLORS[k] ?? ViewerDashboardComponent.DEFAULT_SLICE_COLOR),
           borderColor: 'rgba(0,0,0,0.5)',
           borderWidth: 1
         }]

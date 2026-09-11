@@ -27,7 +27,7 @@ export interface DashboardStats{
 export class DashboardService{
 
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8082/api/rag/dashboard/metrics';
+  private apiUrl = 'http://localhost:8080/api/rag/dashboard/metrics';
 
   getStats(): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(this.apiUrl);

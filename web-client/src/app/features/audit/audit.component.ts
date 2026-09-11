@@ -2,6 +2,7 @@ import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgxFileDropModule, NgxFileDropEntry, FileSystemFileEntry } from 'ngx-file-drop';
 import { HighlightModule } from 'ngx-highlightjs';
+import { KeycloakService } from 'keycloak-angular';
 import { RagService } from '../../core/services/rag.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -41,6 +42,7 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
 export class AuditComponent {
   private ragService = inject(RagService);
   private cdr = inject(ChangeDetectorRef);
+  private keycloak = inject(KeycloakService);
   
   public files: NgxFileDropEntry[] = [];
   public isUploading = false;
@@ -117,7 +119,7 @@ export class AuditComponent {
     }
   }
 
-  public startAudit() {
+  public async startAudit() {
     if (!this.parsedStructure?.contractId) return;
     this.isAnalyzing = true;
     this.auditComplete = false;
@@ -126,9 +128,12 @@ export class AuditComponent {
     this.updateGaugeChart(0, 'SAFE');
     this.analysisStatus = "Connexion au flux SSE...";
     this.cdr.detectChanges();
-    
-    const eventSource = new EventSource(`http://localhost:8082/api/audit/stream/${this.parsedStructure.contractId}`);
-    
+
+    // EventSource can't set an Authorization header, so the access token travels
+    // as a query param; the backend only accepts it on this one SSE endpoint.
+    const token = await this.keycloak.getToken();
+    const eventSource = new EventSource(`http://localhost:8080/api/audit/stream/${this.parsedStructure.contractId}?token=${encodeURIComponent(token)}`);
+
     this.ragService.startSecurityAudit(this.parsedStructure.contractId).subscribe({
       error: (err: any) => {
         let serverMsg = "Erreur Inconnue";

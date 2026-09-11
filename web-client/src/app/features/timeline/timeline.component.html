@@ -1,6 +1,6 @@
 <div class="h-full flex flex-col p-6 space-y-6 max-w-4xl mx-auto w-full">
   <div class="mb-8 text-center">
-    <h1 class="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+    <h1 class="font-display text-4xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-brand-300 to-brand-500">
       Blockchain Timeline
     </h1>
     <p class="text-gray-400 mt-2 text-sm">
@@ -12,7 +12,7 @@
   <div class="flex flex-wrap gap-4 items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-lg">
     <div class="flex flex-col">
       <label class="text-xs text-gray-400 mb-1">Type d'Événement</label>
-      <select [(ngModel)]="filterType" (change)="applyFilters()" class="bg-gray-800 text-sm text-white rounded p-2 border border-gray-700 outline-none focus:border-indigo-500 transition-colors">
+      <select [(ngModel)]="filterType" (change)="applyFilters()" class="bg-white/5 text-sm text-white rounded-lg p-2 border border-white/10 outline-none focus:border-brand-500 transition-colors">
         <option value="">Tous</option>
         <option value="rag-interactions">RAG Interactions</option>
         <option value="audit-results">Audit Results</option>
@@ -22,7 +22,7 @@
     
     <div class="flex flex-col">
       <label class="text-xs text-gray-400 mb-1">Statut Blockchain</label>
-      <select [(ngModel)]="filterStatus" (change)="applyFilters()" class="bg-gray-800 text-sm text-white rounded p-2 border border-gray-700 outline-none focus:border-indigo-500 transition-colors">
+      <select [(ngModel)]="filterStatus" (change)="applyFilters()" class="bg-white/5 text-sm text-white rounded-lg p-2 border border-white/10 outline-none focus:border-brand-500 transition-colors">
         <option value="">Tous</option>
         <option value="PENDING">En attente (Pending)</option>
         <option value="CONFIRMED">Confirmé (Confirmed)</option>
@@ -40,12 +40,12 @@
     </div>
   </div>
 
-  <div class="relative border-l-4 border-indigo-500/30 pl-8 ml-4 space-y-8">
+  <div class="relative border-l-4 border-brand-500/30 pl-8 ml-4 space-y-8">
     <div *ngFor="let proof of filteredProofs" class="relative group">
       <!-- Node -->
       <div class="absolute -left-10 top-2 w-6 h-6 border-4 rounded-full transition-transform duration-300 shadow-[0_0_10px_rgba(0,0,0,0.5)] group-hover:scale-125"
            [ngClass]="{
-             'bg-gray-900 border-indigo-500 group-hover:border-purple-400': proof.eventType === 'audit-results',
+             'bg-gray-900 border-brand-500 group-hover:border-brand-300': proof.eventType === 'audit-results',
              'bg-gray-900 border-blue-500 group-hover:border-cyan-400': proof.eventType === 'rag-interactions',
              'bg-gray-900 border-red-500 group-hover:border-orange-400': proof.eventType === 'hallucination-checks'
            }"></div>
@@ -88,14 +88,14 @@
           <a *ngIf="proof.txHash && proof.txHash !== 'skipped'" 
              [href]="'https://amoy.polygonscan.com/tx/' + proof.txHash" 
              target="_blank" 
-             class="text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+             class="text-brand-400 hover:text-brand-300 flex items-center gap-1">
              <mat-icon class="scale-75">open_in_new</mat-icon> Explorer
           </a>
         </div>
 
         <div class="flex items-center justify-between text-sm text-gray-400 mt-4 border-t border-gray-700/50 pt-3">
           <div class="flex items-center gap-1">
-             <mat-icon class="scale-75 text-indigo-400">person</mat-icon> User: {{proof.userId || 'system'}}
+             <mat-icon class="scale-75 text-brand-400">person</mat-icon> User: {{proof.userId || 'system'}}
           </div>
           
           <div class="flex items-center gap-3">

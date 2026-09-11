@@ -36,8 +36,8 @@ export class DashboardComponent implements OnInit{
         label: 'Requêtes',
         fill: true,
         tension: 0.4,
-        borderColor: '#4f46e5', // Indigo-600
-        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+        borderColor: '#ab7f3f', // brand-500
+        backgroundColor: 'rgba(171, 127, 63, 0.2)',
       }
     ]
   };
@@ -84,16 +84,16 @@ export class DashboardComponent implements OnInit{
       {
         data: [],
         backgroundColor: [
-          '#6366f1', // Indigo-500
-          '#8b5cf6', // Violet-500
-          '#ec4899', // Pink-500
-          '#14b8a6'  // Teal-500
+          '#c0954f', // brand-400
+          '#14b8a6', // teal-500
+          '#e07a5f', // terracotta
+          '#64748b'  // slate-500
         ],
         hoverBackgroundColor: [
-          '#4f46e5',
-          '#7c3aed',
-          '#db2777',
-          '#0d9488'
+          '#ab7f3f', // brand-500
+          '#0d9488',
+          '#c65f42',
+          '#475569'
         ]
       }
     ]

@@ -3,18 +3,18 @@
    Glassmorphism Dark Theme
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* --- Background & Page --- */
 body, html {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
 body {
-  background: #0f0b1e !important;
+  background: #0b0a09 !important;
   overflow-x: hidden;
 }
 
@@ -34,7 +34,7 @@ body::after {
 body::before {
   width: 420px;
   height: 420px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #ab7f3f, #71542a);
   top: -80px;
   left: -100px;
 }
@@ -42,7 +42,7 @@ body::before {
 body::after {
   width: 360px;
   height: 360px;
-  background: linear-gradient(135deg, #ec4899, #f43f5e);
+  background: linear-gradient(135deg, #64748b, #334155);
   bottom: -60px;
   right: -80px;
   animation-delay: -4s;
@@ -64,10 +64,10 @@ body::after {
 }
 
 #kc-header-wrapper {
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-size: 1.75rem !important;
   font-weight: 800 !important;
-  background: linear-gradient(135deg, #e0e7ff, #c7d2fe, #a5b4fc) !important;
+  background: linear-gradient(135deg, #f5ebd4, #e2c99b, #d1ac6c) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
@@ -87,7 +87,7 @@ body::after {
 }
 
 .login-pf body {
-  background: #0f0b1e !important;
+  background: #0b0a09 !important;
 }
 
 #kc-login {
@@ -133,7 +133,7 @@ body::after {
 #kc-form-options label,
 h1, h2 {
   color: rgba(255, 255, 255, 0.9) !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-weight: 600 !important;
   text-align: center;
 }
@@ -141,7 +141,7 @@ h1, h2 {
 #kc-page-title {
   font-size: 1.25rem !important;
   margin-bottom: 1.5rem !important;
-  background: linear-gradient(135deg, #e0e7ff, #a5b4fc) !important;
+  background: linear-gradient(135deg, #f5ebd4, #d1ac6c) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
@@ -152,7 +152,7 @@ label,
 .control-label,
 .pf-c-form__label-text {
   color: rgba(255, 255, 255, 0.7) !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-size: 0.85rem !important;
   font-weight: 500 !important;
   margin-bottom: 0.4rem !important;
@@ -174,7 +174,7 @@ input.pf-c-form-control,
   color: #fff !important;
   padding: 0.75rem 1rem !important;
   font-size: 0.938rem !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   transition: all 0.25s ease !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -238,14 +238,14 @@ input[type="email"]:focus,
 .pf-c-form-control:focus,
 #password:focus,
 #username:focus {
-  border-color: rgba(99, 102, 241, 0.6) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(171, 127, 63, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(171, 127, 63, 0.15) !important;
   background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .pf-c-input-group:focus-within {
-  border-color: rgba(99, 102, 241, 0.6) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(171, 127, 63, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(171, 127, 63, 0.15) !important;
 }
 
 input::placeholder {
@@ -257,8 +257,8 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px rgba(15, 11, 30, 0.95) inset !important;
-  box-shadow: 0 0 0 1000px rgba(15, 11, 30, 0.95) inset !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(11, 10, 9, 0.95) inset !important;
+  box-shadow: 0 0 0 1000px rgba(11, 10, 9, 0.95) inset !important;
   -webkit-text-fill-color: #fff !important;
   caret-color: #fff !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
@@ -270,17 +270,17 @@ input[type="submit"],
 #kc-login,
 .btn-primary,
 .pf-c-button.pf-m-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  background: linear-gradient(135deg, #ab7f3f, #71542a) !important;
   color: #fff !important;
   border: none !important;
   border-radius: 14px !important;
   padding: 0.8rem 1.5rem !important;
   font-size: 0.938rem !important;
   font-weight: 600 !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   cursor: pointer !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(171, 127, 63, 0.4) !important;
   width: 100% !important;
   text-transform: none !important;
   letter-spacing: 0.01em !important;
@@ -291,8 +291,8 @@ input[type="submit"]:hover,
 .btn-primary:hover,
 .pf-c-button.pf-m-primary:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5) !important;
-  background: linear-gradient(135deg, #818cf8, #a78bfa) !important;
+  box-shadow: 0 8px 24px rgba(171, 127, 63, 0.5) !important;
+  background: linear-gradient(135deg, #c0954f, #ab7f3f) !important;
 }
 
 input[type="submit"]:active,
@@ -308,7 +308,7 @@ input[type="submit"]:active,
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-radius: 14px !important;
   padding: 0.7rem 1.5rem !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-weight: 600 !important;
   transition: all 0.25s ease !important;
 }
@@ -324,14 +324,14 @@ a,
 .pf-c-button.pf-m-link,
 #kc-registration a,
 .kc-social-links a {
-  color: #a5b4fc !important;
+  color: #d1ac6c !important;
   text-decoration: none !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
   transition: color 0.2s ease !important;
 }
 
 a:hover {
-  color: #c7d2fe !important;
+  color: #e2c99b !important;
   text-decoration: underline !important;
 }
 
@@ -408,13 +408,13 @@ button[aria-label*="password"] {
 }
 
 #kc-info a:hover {
-  color: #a5b4fc !important;
+  color: #d1ac6c !important;
 }
 
 /* --- Misc overrides --- */
 .login-pf,
 .login-pf body {
-  background: #0f0b1e !important;
+  background: #0b0a09 !important;
 }
 
 /* Remove default keycloak background images */
@@ -449,7 +449,7 @@ button[aria-label*="password"] {
   border-radius: 3px;
 }
 /* ============================================
-   AUTH PAGE — Premium Glassmorphism Theme
+   AUTH PAGE ï¿½ Premium Glassmorphism Theme
    ============================================ */
 
 /* --- Full-screen layout --- */
@@ -460,8 +460,8 @@ button[aria-label*="password"] {
   justify-content: center;
   min-height: 100vh;
   overflow: hidden;
-  font-family: 'Inter', sans-serif;
-  background: #0f0b1e;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #0b0a09;
 }
 
 /* --- Animated background orbs --- */
@@ -483,7 +483,7 @@ button[aria-label*="password"] {
 .auth-bg-orb--1 {
   width: 420px;
   height: 420px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #ab7f3f, #71542a);
   top: -80px;
   left: -100px;
   animation-delay: 0s;
@@ -492,7 +492,7 @@ button[aria-label*="password"] {
 .auth-bg-orb--2 {
   width: 360px;
   height: 360px;
-  background: linear-gradient(135deg, #ec4899, #f43f5e);
+  background: linear-gradient(135deg, #64748b, #334155);
   bottom: -60px;
   right: -80px;
   animation-delay: -4s;
@@ -501,7 +501,7 @@ button[aria-label*="password"] {
 .auth-bg-orb--3 {
   width: 280px;
   height: 280px;
-  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  background: linear-gradient(135deg, #8f6a34, #573f21);
   top: 50%;
   left: 60%;
   transform: translate(-50%, -50%);
@@ -573,22 +573,24 @@ button[aria-label*="password"] {
 .auth-logo svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+  filter: drop-shadow(0 4px 12px rgba(171, 127, 63, 0.4));
 }
 
 @keyframes logoPulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4)); }
-  50% { transform: scale(1.05); filter: drop-shadow(0 6px 20px rgba(99, 102, 241, 0.6)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(171, 127, 63, 0.4)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 6px 20px rgba(171, 127, 63, 0.6)); }
 }
 
 .auth-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #e0e7ff, #c7d2fe, #a5b4fc);
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  font-size: 1.85rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f5ebd4, #e2c99b, #d1ac6c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   margin: 0 0 0.5rem;
 }
 
@@ -642,13 +644,13 @@ button[aria-label*="password"] {
 }
 
 .auth-feature:hover .auth-feature-icon {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(171, 127, 63, 0.15);
+  border-color: rgba(171, 127, 63, 0.3);
   transform: translateY(-2px);
 }
 
 .auth-feature:hover .auth-feature-icon svg {
-  fill: #a5b4fc;
+  fill: #d1ac6c;
 }
 
 .auth-feature span {
@@ -672,7 +674,7 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
 input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #241d3d inset !important;
+    -webkit-box-shadow: 0 0 0 30px #1c1a17 inset !important;
     -webkit-text-fill-color: white !important;
     transition: background-color 5000s ease-in-out 0s;
 }

@@ -1,7 +1,7 @@
 <div class="h-full flex flex-col p-6 space-y-6 max-w-6xl mx-auto w-full">
   <div class="flex flex-col gap-6">
     <div>
-      <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+      <h1 class="font-display text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-brand-300 to-brand-500">
         Historique des Audits
       </h1>
       <p class="text-gray-400 mt-2 text-sm">
@@ -64,7 +64,7 @@
       <ng-container matColumnDef="auditor">
         <th mat-header-cell *matHeaderCellDef class="text-gray-300"> Auditeur </th>
         <td mat-cell *matCellDef="let element" class="text-gray-400">
-           <mat-icon class="scale-75 inline-block -mt-1 text-indigo-400">person</mat-icon> {{element.auditor || 'Automated'}}
+           <mat-icon class="scale-75 inline-block -mt-1 text-brand-400">person</mat-icon> {{element.auditor || 'Automated'}}
         </td>
       </ng-container>
 
