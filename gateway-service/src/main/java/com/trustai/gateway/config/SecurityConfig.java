@@ -21,6 +21,8 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
             .authorizeExchange(exchanges -> exchanges
+                // Autoriser les requêtes preflight CORS
+                .pathMatchers(org.springframework.http.HttpMethod.OPTIONS).permitAll()
                 // Le handshake HTTP d'upgrade WebSocket doit rester public : l'authentification
                 // du canal STOMP se fait via le frame CONNECT (header Authorization applicatif),
                 // pas via un Bearer token sur la requête HTTP d'upgrade. rag-service applique la

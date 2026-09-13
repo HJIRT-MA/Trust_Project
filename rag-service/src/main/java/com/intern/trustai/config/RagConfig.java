@@ -1,6 +1,5 @@
 package com.intern.trustai.config;
 
-
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.data.segment.TextSegment;
@@ -31,6 +30,11 @@ public class RagConfig {
     @Value("${spring.datasource.password}")
     private String dbPassword;
 
+    @Value("${ollama.model.chat:llama3:latest}")
+    private String chatModelName;
+
+    @Value("${ollama.model.streaming:llama3:latest}")
+    private String streamingModelName;
 
     @Bean
     public EmbeddingModel embeddingModel() {
@@ -58,16 +62,16 @@ public class RagConfig {
     public ChatLanguageModel chatLanguageModel() {
         return OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3:latest")
+                .modelName(chatModelName)
                 .timeout(Duration.ofMinutes(5))
                 .build();
-   }
+    }
 
     @Bean
     public StreamingChatLanguageModel streamingChatLanguageModel() {
         return OllamaStreamingChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3.2:3b")
+                .modelName(streamingModelName)
                 .timeout(Duration.ofMinutes(5))
                 .build();
     }

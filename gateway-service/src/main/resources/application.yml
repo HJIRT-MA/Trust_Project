@@ -30,6 +30,8 @@ spring:
           uri: http://localhost:8082
           predicates:
             - Path=/api/**
+          filters:
+            - TokenRelay=
         # Canal WebSocket/STOMP (chat en streaming). Route séparée car le schéma d'URI
         # change (ws:// au lieu de http://) ; l'upgrade doit rester public au niveau HTTP
         # (voir gateway SecurityConfig), l'authentification réelle se fait via le frame
