@@ -160,8 +160,18 @@ export class ChatComponent implements OnInit {
             }
             aiMsg.content += payload.token;
           } else if (payload.type === 'verifying') {
+            if (!firstTokenReceived) {
+                this.isSearching = false;
+                firstTokenReceived = true;
+                this.currentMessages.push(aiMsg);
+            }
             aiMsg.isVerifying = true;
           } else if (payload.type === 'complete') {
+            if (!firstTokenReceived) {
+                this.isSearching = false;
+                firstTokenReceived = true;
+                this.currentMessages.push(aiMsg);
+            }
             aiMsg.isVerifying = false;
             aiMsg.confidenceScore = payload.confidenceScore;
             
@@ -183,6 +193,18 @@ export class ChatComponent implements OnInit {
             this.isSearching = false;
             if (this.wsSubscription) {
                 this.wsSubscription.unsubscribe();
+            }
+            // Fetch messages from DB to recover any lost tokens
+            if (this.currentConversationId) {
+                this.ragService.getConversationMessages(this.currentConversationId).subscribe(msgs => {
+                    this.currentMessages = msgs.map(msg => {
+                        if (msg.claimAnalysis) {
+                            try { msg.claimAnalysis = JSON.parse(msg.claimAnalysis); } catch (e) {}
+                        }
+                        msg.showAudit = false;
+                        return msg;
+                    });
+                });
             }
           } else if (payload.type === 'error') {
             if (!firstTokenReceived) {
